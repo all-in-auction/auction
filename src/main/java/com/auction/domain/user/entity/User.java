@@ -40,7 +40,7 @@ public class User extends TimeStamped {
     private LocalDateTime deletedAt;
 
     @OneToMany(mappedBy = "user")
-    private List<AuctionHistory> auctionHistoryList = new ArrayList<>();
+    private List<AuctionHistory> historyList = new ArrayList<>();
 
     public User(String encodedPassword, SignupRequestDto requestDto) {
         this.email = requestDto.getEmail();
@@ -52,6 +52,16 @@ public class User extends TimeStamped {
         this.address2 = requestDto.getAddress2();
         this.authority = UserRole.of(requestDto.getAuthority());
         this.activate = true;
+    }
+
+    private User(long id) {
+        this.id = id;
+    }
+
+    private User(long id, String email, UserRole userRole) {
+        this.id = id;
+        this.email = email;
+        this.authority = userRole;
     }
 
     public void changeDeactivate() {
@@ -67,6 +77,10 @@ public class User extends TimeStamped {
 
     public static User fromAuthUser(AuthUser authUser) {
         return new User(authUser.getId(), authUser.getEmail(), authUser.getUserRole());
+    }
+
+    public static User fromUserId(long userId) {
+        return new User(userId);
     }
 
     public void updateUser(UserUpdateRequestDto requestDto) {

@@ -9,8 +9,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 @Entity
@@ -22,13 +20,12 @@ public class AuctionItem extends TimeStamped {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "userId", nullable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
     @Column(nullable = false, length = 150)
     private String name;
 
-    @Column(nullable = false, length = 500)
     private String content;
 
     @Column(nullable = false)
@@ -44,10 +41,7 @@ public class AuctionItem extends TimeStamped {
 
     private boolean isAutoExtension;
 
-    @OneToMany(mappedBy = "auctionItem")
-    private List<AuctionHistory> auctionHistoryList = new ArrayList<>();
-
-    private AuctionItem(User user, String name, String content, int minPrice, int maxPrice, ItemCategory category, LocalDateTime expireAt, boolean isAutoExtension){
+    private AuctionItem(User user, String name, String content, int minPrice, int maxPrice, ItemCategory category, LocalDateTime expireAt, boolean isAutoExtension) {
         this.user = user;
         this.name = name;
         this.content = content;
@@ -62,9 +56,31 @@ public class AuctionItem extends TimeStamped {
         return new AuctionItem(user, name, content, minPrice, maxPrice, category, expireAt, isAutoExtension);
     }
 
-    public void changeName(String name) {this.name = name;}
-    public void changeContent(String content) {this.content = content;}
-    public void changeMinPrice(int minPrice) {this.minPrice = minPrice;}
-    public void changeCategory(ItemCategory category) {this.category = category;}
-    public void changeAutoExtension(boolean isAutoExtension) {this.isAutoExtension = isAutoExtension;}
+    public void changeName(String name) {
+        this.name = name;
+    }
+
+    public void changeContent(String content) {
+        this.content = content;
+    }
+
+    public void changeMinPrice(int minPrice) {
+        this.minPrice = minPrice;
+    }
+
+    public void changeCategory(ItemCategory category) {
+        this.category = category;
+    }
+
+    public void changeAutoExtension(boolean isAutoExtension) {
+        this.isAutoExtension = isAutoExtension;
+    }
+
+    public void changeMaxPrice(int maxPrice) {
+        this.maxPrice = maxPrice;
+    }
+
+    public void changeExpireAt(LocalDateTime expireAt) {
+        this.expireAt = expireAt;
+    }
 }

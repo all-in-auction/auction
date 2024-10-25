@@ -3,12 +3,11 @@ package com.auction.domain.user.service;
 import com.auction.common.apipayload.status.ErrorStatus;
 import com.auction.common.entity.AuthUser;
 import com.auction.common.exception.ApiException;
-import com.auction.domain.auction.dto.response.AuctionItemResponseDto;
+import com.auction.domain.auction.dto.response.ItemResponseDto;
 import com.auction.domain.auction.entity.AuctionHistory;
-import com.auction.domain.auction.entity.AuctionItem;
-import com.auction.domain.auction.repository.AuctionHistoryRepository;
-import com.auction.domain.auction.repository.AuctionItemRepository;
-import com.auction.domain.auth.dto.request.SignoutRequest;
+import com.auction.domain.auction.entity.Item;
+import com.auction.domain.auction.repository.AuctionRepository;
+import com.auction.domain.auction.repository.ItemRepository;
 import com.auction.domain.auth.service.AuthService;
 import com.auction.domain.user.dto.request.UserUpdateRequestDto;
 import com.auction.domain.user.dto.response.UserResponseDto;
@@ -28,19 +27,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final AuthService authService;
     private final BCryptPasswordEncoder passwordEncoder;
-    private final AuctionItemRepository auctionItemRepository;
-
-    // 유저 soft-delete 처리
-    @Transactional
-    public void deactivateUser(AuthUser authUser, SignoutRequest signoutRequest) {
-        User user = userRepository.findById(authUser.getId()).orElseThrow(
-                () -> new ApiException(ErrorStatus._NOT_FOUND_USER)
-        );
-
-        authService.isDeactivateUser(user);
-        authService.checkPassword(signoutRequest.getPassword(), user.getPassword());
-        user.changeDeactivate();
-    }
+    private final AuctionRepository auctionRepository;
+    private final ItemRepository itemRepository;
 
     // 유저 정보 수정
     @Transactional
@@ -63,24 +51,24 @@ public class UserService {
     }
 
     // 판매 내역 리스트 반환
-    public List<AuctionItemResponseDto> getSales(AuthUser authUser) {
+    public List<ItemResponseDto> getSales(AuthUser authUser) {
         User user = User.fromAuthUser(authUser);
 
-        List<AuctionItem> itemList = auctionItemRepository.findByUser(user);
+        List<Long> itemIdList = auctionRepository.findItemIdListBySeller(user);
+        List<Item> itemList = itemRepository.findByIdList(itemIdList);
 
         return itemList.stream()
-                .map(AuctionItemResponseDto::from)
+                .map(ItemResponseDto::from)
                 .collect(Collectors.toList());
     }
 
-
     // 옥션 히스토리에서 userId 가 같고 is_sold 가 true 인 값 -> 본인 구매 내역
-    public List<AuctionItemResponseDto> getPurchases(AuthUser authUser) {
+    public List<ItemResponseDto> getPurchases(AuthUser authUser) {
         User user = User.fromAuthUser(authUser);
 
-        return user.getAuctionHistoryList().stream()
+        return user.getHistoryList().stream()
                 .filter(AuctionHistory::isSold)
-                .map(auctionHistory -> AuctionItemResponseDto.from(auctionHistory.getAuctionItem()))
+                .map(auctionHistory -> ItemResponseDto.from(auctionHistory.getAuction().getItem()))
                 .collect(Collectors.toList());
     }
 }

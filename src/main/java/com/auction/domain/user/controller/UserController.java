@@ -2,8 +2,7 @@ package com.auction.domain.user.controller;
 
 import com.auction.common.apipayload.ApiResponse;
 import com.auction.common.entity.AuthUser;
-import com.auction.domain.auction.dto.response.AuctionItemResponseDto;
-import com.auction.domain.auth.dto.request.SignoutRequest;
+import com.auction.domain.auction.dto.response.ItemResponseDto;
 import com.auction.domain.user.dto.request.UserUpdateRequestDto;
 import com.auction.domain.user.dto.response.UserResponseDto;
 import com.auction.domain.user.service.UserService;
@@ -19,15 +18,6 @@ import java.util.List;
 public class UserController {
     private final UserService userService;
 
-    @PutMapping("/v1/users")
-    public ApiResponse<Void> deactivateUser(
-            @AuthenticationPrincipal AuthUser authUser,
-            @RequestBody SignoutRequest signoutRequest) {
-
-        userService.deactivateUser(authUser, signoutRequest);
-        return ApiResponse.ok(null);
-    }
-
     @PostMapping("/v1/users")
     public ApiResponse<UserResponseDto> updateUser(
             @AuthenticationPrincipal AuthUser authUser,
@@ -37,14 +27,14 @@ public class UserController {
     }
 
     @GetMapping("/v1/users/mypage/sales")
-    public ApiResponse<List<AuctionItemResponseDto>> getSales(
+    public ApiResponse<List<ItemResponseDto>> getSales(
         @AuthenticationPrincipal AuthUser authUser) {
 
         return ApiResponse.ok(userService.getSales(authUser));
     }
 
     @GetMapping("/v1/users/mypage/purchases")
-    public ApiResponse<List<AuctionItemResponseDto>> getPurchases(
+    public ApiResponse<List<ItemResponseDto>> getPurchases(
             @AuthenticationPrincipal AuthUser authUser) {
 
         return ApiResponse.ok(userService.getPurchases(authUser));
