@@ -88,7 +88,6 @@ public class AuctionController {
      * @param pageable 페이지 조건으로 검색 : ?page=&size=
      * @param name 경매 물품 이름으로 검색 (부분 검색 허용) : ?name=
      * @param category 경매 물품 카테고리로 검색 : ?category=
-     * @param sortBy 조건별 정렬 검색 ('priceLow':최소가격 낮은 순, 'priceHigh':최소가격 높은 순, 'oldest':오래된 순, default:최신 순) : ?sortBy=
      * @return Page<AuctionResponseDto>
      */
     @GetMapping("/v1/auctions/search")

@@ -3,6 +3,7 @@ package com.auction.domain.auction.event.consume;
 import com.auction.domain.auction.event.dto.AuctionEvent;
 import com.auction.domain.auction.event.dto.RefundEvent;
 import com.auction.domain.auction.service.AuctionService;
+import com.auction.domain.deposit.service.DepositService;
 import com.auction.domain.point.service.PointService;
 import com.auction.domain.pointHistory.enums.PaymentType;
 import com.auction.domain.pointHistory.service.PointHistoryService;
@@ -23,6 +24,7 @@ public class AuctionConsumer {
     private final AuctionService auctionService;
     private final PointService pointService;
     private final PointHistoryService pointHistoryService;
+    private final DepositService depositService;
 
     @RabbitListener(queues = "auction.queue")
     public void auctionConsumer(String message) {
@@ -40,6 +42,7 @@ public class AuctionConsumer {
         try {
             log.info("RefundEvent : {}", message);
             RefundEvent refundEvent = objectMapper.readValue(message, RefundEvent.class);
+            depositService.deleteDeposit(refundEvent.getUserId(), refundEvent.getAuctionId());
             pointService.increasePoint(refundEvent.getUserId(), refundEvent.getDeposit());
             pointHistoryService.createPointHistory(User.fromUserId(refundEvent.getUserId()), refundEvent.getDeposit(), PaymentType.REFUND);
         } catch (JsonProcessingException e) {

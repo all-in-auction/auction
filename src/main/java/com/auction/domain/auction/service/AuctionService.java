@@ -37,6 +37,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -85,7 +86,7 @@ public class AuctionService {
         auctionPublisher.auctionPublisher(
                 AuctionEvent.from(savedAuction),
                 TimeConverter.toLong(savedAuction.getExpireAt()),
-                TimeConverter.toLong(LocalDateTime.now())
+                new Date().getTime()
         );
 
         return AuctionCreateResponseDto.from(savedAuction);
@@ -163,7 +164,7 @@ public class AuctionService {
             auction.changeExpireAt(auction.getExpireAt().plusMinutes(10L));
         }
 
-        // 포인트 차감
+        // 포인트 차감, 보증금 예치
         depositService.getDeposit(user.getId(), auctionId).ifPresentOrElse(
                 (deposit) -> {
                     int prevDeposit = Integer.parseInt(deposit.toString());
@@ -211,15 +212,23 @@ public class AuctionService {
                     auction.changeBuyer(auctionHistory.getUser());
                     auctionRepository.save(auction);
 
+                    // 보증금 제거
+                    depositService.deleteDeposit(auctionHistory.getUser().getId(), auctionId);
+
+                    log.debug("topBid : {}", auctionHistory);
+
                     // TODO(Auction) : 경매 낙찰로 인한 알림 (V2)
                     notificationService.send(auctionHistory.getUser(), Notification.NotificationType.AUCTION, "경매가 낙찰되었습니다.", "url");
 
                     // TODO(Auction) : 경매 패찰로 인한 알림 (V2)
-                    List<AuctionHistoryDto> list = auctionHistoryRepository.findAuctionHistoryByAuctionId(auctionId, auctionHistory.getUser().getId());
+                    // 패찰한 사용자 환불 처리 (메시지큐에 던짐)
+                    List<AuctionHistoryDto> list = auctionHistoryRepository
+                            .findAuctionHistoryByAuctionId(auctionId, auctionHistory.getUser().getId());
+                    log.debug("refund list : {}", list.toString());
                     notificationService.send(auctionHistory.getUser(), Notification.NotificationType.AUCTION, "경매가 패찰되었습니다.", "url");
 
                     for (AuctionHistoryDto auctionHistoryDto : list) {
-                        auctionPublisher.refundPublisher(RefundEvent.from(auctionHistoryDto));
+                        auctionPublisher.refundPublisher(RefundEvent.from(auctionId, auctionHistoryDto));
                     }
                 },
                 () -> {

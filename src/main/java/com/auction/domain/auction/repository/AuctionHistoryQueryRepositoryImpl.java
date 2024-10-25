@@ -19,14 +19,17 @@ public class AuctionHistoryQueryRepositoryImpl implements AuctionHistoryQueryRep
     @Override
     public List<AuctionHistoryDto> findAuctionHistoryByAuctionId(long auctionId, long userId) {
         return jpaQueryFactory.select(
-                        new QAuctionHistoryDto(auctionHistory.user.id, auctionHistory.price.max())
+                        new QAuctionHistoryDto(
+                                auctionHistory.user.id,
+                                auctionHistory.price.max()
+                        )
                 )
                 .from(auctionHistory)
                 .where(
                         auctionHistory.auction.id.eq(auctionId),
                         auctionHistory.user.id.ne(userId)
                 )
-                .groupBy(user.id)
+                .groupBy(auctionHistory.user.id)
                 .fetch();
     }
 }
