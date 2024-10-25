@@ -12,13 +12,11 @@ import com.auction.domain.auction.dto.response.AuctionCreateResponseDto;
 import com.auction.domain.auction.dto.response.AuctionResponseDto;
 import com.auction.domain.auction.dto.response.BidCreateResponseDto;
 import com.auction.domain.auction.entity.Auction;
-import com.auction.domain.auction.entity.AuctionHistory;
 import com.auction.domain.auction.entity.Item;
 import com.auction.domain.auction.enums.ItemCategory;
 import com.auction.domain.auction.event.dto.AuctionEvent;
 import com.auction.domain.auction.event.dto.RefundEvent;
 import com.auction.domain.auction.event.publish.AuctionPublisher;
-import com.auction.domain.auction.repository.AuctionHistoryRepository;
 import com.auction.domain.auction.repository.AuctionRepository;
 import com.auction.domain.auction.repository.ItemRepository;
 import com.auction.domain.deposit.service.DepositService;
@@ -27,17 +25,18 @@ import com.auction.domain.point.service.PointService;
 import com.auction.domain.pointHistory.enums.PaymentType;
 import com.auction.domain.pointHistory.service.PointHistoryService;
 import com.auction.domain.user.entity.User;
+import com.auction.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -47,13 +46,17 @@ public class AuctionService {
     private final ItemRepository itemRepository;
     private final PointRepository pointRepository;
     private final AuctionRepository auctionRepository;
-    private final AuctionHistoryRepository auctionHistoryRepository;
 
     private final PointService pointService;
     private final PointHistoryService pointHistoryService;
     private final DepositService depositService;
+    private final UserService userService;
 
     private final AuctionPublisher auctionPublisher;
+
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    public static final String AUCTION_HISTORY_PREFIX = "auction:bid:";
 
     private Auction getAuction(long auctionId) {
         return auctionRepository.findByAuctionId(auctionId)
@@ -143,11 +146,11 @@ public class AuctionService {
             throw new ApiException(ErrorStatus._INVALID_BID_CLOSED_AUCTION);
         }
 
+        String auctionHistoryKey = AUCTION_HISTORY_PREFIX + auction.getId();
+        
         // 입찰가 변환 : ex) 15999 -> 15000
         int bidPrice = (bidCreateRequestDto.getPrice() / 1000) * 1000;
-        if (bidPrice <= auction.getMaxPrice()) {
-            throw new ApiException(ErrorStatus._INVALID_LESS_THAN_MAX_PRICE);
-        }
+        validBidPrice(bidPrice, auction, auctionHistoryKey);
 
         int pointAmount = pointRepository.findPointByUserId(user.getId());
         if (pointAmount < bidPrice) {
@@ -177,8 +180,8 @@ public class AuctionService {
         );
         depositService.placeDeposit(user.getId(), auctionId, bidPrice);
 
-        AuctionHistory auctionHistory = AuctionHistory.of(false, bidPrice, auction, user);
-        auctionHistoryRepository.save(auctionHistory);
+        // redis zset 에 입찰 기록 저장
+        redisTemplate.opsForZSet().add(auctionHistoryKey, user.getId().toString(), bidPrice);
 
         auction.changeMaxPrice(bidPrice);
         auctionRepository.save(auction);
@@ -193,6 +196,9 @@ public class AuctionService {
 
         long originExpiredAt = auctionEvent.getExpiredAt();
         long dataSourceExpiredAt = TimeConverter.toLong(auction.getExpireAt());
+
+        String auctionHistoryKey = AUCTION_HISTORY_PREFIX + auctionId;
+
         // 마감 시간 수정
         if (dataSourceExpiredAt != originExpiredAt) {
             auctionEvent.changeAuctionExpiredAt(dataSourceExpiredAt);
@@ -200,37 +206,54 @@ public class AuctionService {
             return;
         }
 
-        auctionHistoryRepository.getLastBidAuctionHistory(auctionId).ifPresentOrElse(
-                auctionHistory -> {
-                    // 경매 낙찰
-                    // 구매자 경매 이력 수정
-                    auctionHistory.changeIsSold(true);
-                    auctionHistoryRepository.save(auctionHistory);
+        Set<Object> result = redisTemplate.opsForZSet().reverseRange(auctionHistoryKey, 0, 0);
+        if (result == null || result.isEmpty()) {
+            // 경매 유찰
+            // TODO(Auction) : 경매 유찰로 인한 알림 (V2)
+        } else {
+            // 경매 낙찰
+            // 구매자 경매 이력 수정
+            String buyerId = (String) result.iterator().next();
+            User buyer = userService.getUser(Long.parseLong(buyerId));
 
-                    auction.changeBuyer(auctionHistory.getUser());
-                    auctionRepository.save(auction);
+            auction.changeBuyer(buyer);
 
-                    // 보증금 제거
-                    depositService.deleteDeposit(auctionHistory.getUser().getId(), auctionId);
+            // 보증금 제거
+            depositService.deleteDeposit(buyer.getId(), auctionId);
+            log.debug("topBidUser : {}", buyer.getId());
 
-                    log.debug("topBid : {}", auctionHistory);
+            // TODO(Auction) : 경매 낙찰로 인한 알림 (V2)
 
-                    // TODO(Auction) : 경매 낙찰로 인한 알림 (V2)
+            // TODO(Auction) : 경매 패찰로 인한 알림 (V2)
+            // 패찰한 사용자 환불 처리 (메시지큐에 던짐)
+            Set<ZSetOperations.TypedTuple<Object>> typedTuples
+                    = redisTemplate.opsForZSet().reverseRangeWithScores(auctionHistoryKey, 1, -1);
 
-                    // TODO(Auction) : 경매 패찰로 인한 알림 (V2)
-                    // 패찰한 사용자 환불 처리 (메시지큐에 던짐)
-                    List<AuctionHistoryDto> list = auctionHistoryRepository
-                            .findAuctionHistoryByAuctionId(auctionId, auctionHistory.getUser().getId());
-                    log.debug("refund list : {}", list.toString());
+            List<AuctionHistoryDto> list = new ArrayList<>();
+            Optional.ofNullable(typedTuples)
+                    .filter(tuples -> !tuples.isEmpty())
+                    .ifPresent(tuples -> {
+                        for (ZSetOperations.TypedTuple<Object> tuple : tuples) {
+                            String userId = (String) tuple.getValue();
+                            int price = tuple.getScore().intValue();
+                            list.add(new AuctionHistoryDto(Long.parseLong(userId), price));
+                        }
+                    });
+            log.debug("refund list : {}", list.toString());
 
-                    for (AuctionHistoryDto auctionHistoryDto : list) {
-                        auctionPublisher.refundPublisher(RefundEvent.from(auctionId, auctionHistoryDto));
-                    }
-                },
-                () -> {
-                    // 경매 유찰
-                    // TODO(Auction) : 경매 유찰로 인한 알림 (V2)
-                }
-        );
+            for (AuctionHistoryDto auctionHistoryDto : list) {
+                auctionPublisher.refundPublisher(RefundEvent.from(auctionId, auctionHistoryDto));
+            }
+        }
+        // redis key 삭제
+        redisTemplate.delete(auctionHistoryKey);
+    }
+
+    private void validBidPrice(int bidPrice, Auction auction, String auctionHistoryKey) {
+        Long size = redisTemplate.opsForZSet().zCard(auctionHistoryKey);
+        if (bidPrice < auction.getMaxPrice() // 입찰가가 현재 최대 입찰가보다 낮거나
+                || (bidPrice == auction.getMaxPrice() && size != null && size != 0)) { // 최대 입찰가와 같으면
+            throw new ApiException(ErrorStatus._INVALID_LESS_THAN_MAX_PRICE);
+        }
     }
 }
