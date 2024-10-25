@@ -1,7 +1,5 @@
 package com.auction.domain.point.service;
 
-import com.auction.common.apipayload.ApiResponse;
-import com.auction.common.apipayload.BaseCode;
 import com.auction.common.apipayload.status.ErrorStatus;
 import com.auction.common.entity.AuthUser;
 import com.auction.common.exception.ApiException;
