@@ -22,6 +22,8 @@ import com.auction.domain.auction.repository.AuctionHistoryRepository;
 import com.auction.domain.auction.repository.AuctionRepository;
 import com.auction.domain.auction.repository.ItemRepository;
 import com.auction.domain.deposit.service.DepositService;
+import com.auction.domain.notification.entity.Notification;
+import com.auction.domain.notification.service.NotificationService;
 import com.auction.domain.point.repository.PointRepository;
 import com.auction.domain.point.service.PointService;
 import com.auction.domain.pointHistory.enums.PaymentType;
@@ -51,8 +53,8 @@ public class AuctionService {
     private final PointService pointService;
     private final PointHistoryService pointHistoryService;
     private final DepositService depositService;
-
     private final AuctionPublisher auctionPublisher;
+    private final NotificationService notificationService;
 
     private Auction getAuction(long auctionId) {
         return auctionRepository.findByAuctionId(auctionId)
@@ -210,9 +212,11 @@ public class AuctionService {
                     auctionRepository.save(auction);
 
                     // TODO(Auction) : 경매 낙찰로 인한 알림 (V2)
+                    notificationService.send(auctionHistory.getUser(), Notification.NotificationType.AUCTION, "경매가 낙찰되었습니다.", "url");
 
                     // TODO(Auction) : 경매 패찰로 인한 알림 (V2)
                     List<AuctionHistoryDto> list = auctionHistoryRepository.findAuctionHistoryByAuctionId(auctionId, auctionHistory.getUser().getId());
+                    notificationService.send(auctionHistory.getUser(), Notification.NotificationType.AUCTION, "경매가 패찰되었습니다.", "url");
 
                     for (AuctionHistoryDto auctionHistoryDto : list) {
                         auctionPublisher.refundPublisher(RefundEvent.from(auctionHistoryDto));
