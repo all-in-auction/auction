@@ -18,11 +18,11 @@ public class AuctionEvent implements Serializable {
     private long userId;
     private long expiredAt;
 
-    public static AuctionEvent from(Auction auctionItem) {
+    public static AuctionEvent from(Auction auction) {
         return new AuctionEvent(
-                auctionItem.getId(),
-                auctionItem.getSeller().getId(),
-                TimeConverter.toLong(auctionItem.getExpireAt())
+                auction.getId(),
+                auction.getSeller().getId(),
+                TimeConverter.toLong(auction.getExpireAt())
         );
     }
 

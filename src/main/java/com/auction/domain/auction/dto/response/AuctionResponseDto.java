@@ -18,7 +18,6 @@ public class AuctionResponseDto {
     private int maxPrice;
     private boolean isSold;
     private boolean isAutoExtension;
-    private boolean isAgreeEvent;
     private LocalDateTime createdAt;
     private LocalDateTime expireAt;
     private ItemResponseDto item;
@@ -26,6 +25,6 @@ public class AuctionResponseDto {
     public static AuctionResponseDto from(Auction auction) {
         return new AuctionResponseDto(auction.getId(), auction.getSeller().getId(), auction.getBuyerId(),
                 auction.getMinPrice(), auction.getMaxPrice(), auction.isSold(), auction.isAutoExtension(),
-                auction.isAgreeEvent(), auction.getCreatedAt(), auction.getExpireAt(), ItemResponseDto.from(auction.getItem()));
+                auction.getCreatedAt(), auction.getExpireAt(), ItemResponseDto.from(auction.getItem()));
     }
 }

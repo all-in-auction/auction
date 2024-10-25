@@ -93,14 +93,14 @@ public class PointService {
     @Transactional
     public void decreasePoint(long userId, int price) {
         Point point = getPoint(userId);
-        point.minusPoint(price);
+        point.changePoint(point.getPointAmount() - price);
         pointRepository.save(point);
     }
 
     @Transactional
     public void increasePoint(long userId, int price) {
         Point point = getPoint(userId);
-        point.addPoint(price);
+        point.changePoint(point.getPointAmount() + price);
         pointRepository.save(point);
     }
 
