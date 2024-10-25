@@ -13,11 +13,13 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RefundEvent implements Serializable {
+    private long auctionId;
     private long userId;
     private int deposit;
 
-    public static RefundEvent from(AuctionHistoryDto auctionHistorydto) {
+    public static RefundEvent from(long auctionId, AuctionHistoryDto auctionHistorydto) {
         return new RefundEvent(
+                auctionId,
                 auctionHistorydto.getUserId(),
                 auctionHistorydto.getPrice()
         );

@@ -27,7 +27,7 @@ public class Auction extends TimeStamped {
     @JoinColumn(name = "sellerId")
     private User seller;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "buyerId")
     private User buyer;
 
@@ -37,7 +37,6 @@ public class Auction extends TimeStamped {
 
     private boolean isSold;
     private boolean isAutoExtension;
-    private boolean isAgreeEvent;
 
     @Column(nullable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
@@ -51,21 +50,28 @@ public class Auction extends TimeStamped {
         this.isAutoExtension = isAutoExtension;
         this.expireAt = LocalDateTime.now().plusHours(expireAfter.getHour()).plusMinutes(expireAfter.getMinute());
     }
+
     public static Auction of(Item item, User seller, int minPrice, boolean isAutoExtension, LocalTime expireAfter) {
         return new Auction(item, seller, minPrice, isAutoExtension, expireAfter);
     }
+
     public void changeItem(Item item) {
         this.item = item;
     }
+
     public void changeExpireAt(LocalDateTime expireAt) {
         this.expireAt = expireAt;
     }
+
     public void changeMaxPrice(int maxPrice) {
         this.maxPrice = maxPrice;
     }
+
     public void changeBuyer(User buyer) {
         this.buyer = buyer;
+        this.isSold = true;
     }
+
     public Long getBuyerId() {
         return buyer != null ? buyer.getId() : null;
     }

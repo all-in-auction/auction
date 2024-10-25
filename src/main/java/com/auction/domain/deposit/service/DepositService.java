@@ -23,4 +23,8 @@ public class DepositService {
         Object deposit = redisTemplate.opsForHash().get(key(userId, auctionId), "deposit");
         return Optional.ofNullable(deposit);
     }
+
+    public void deleteDeposit(long userId, long auctionId) {
+        redisTemplate.opsForHash().delete(key(userId, auctionId), "deposit");
+    }
 }
