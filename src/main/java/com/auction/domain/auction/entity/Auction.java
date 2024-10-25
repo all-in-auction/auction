@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Getter
 @Entity
@@ -42,16 +43,16 @@ public class Auction extends TimeStamped {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime expireAt;
 
-    private Auction(Item item, User seller, int minPrice, boolean isAutoExtension, LocalDateTime expireAt) {
+    private Auction(Item item, User seller, int minPrice, boolean isAutoExtension, LocalTime expireAfter) {
         this.item = item;
         this.seller = seller;
         this.minPrice = minPrice;
         this.maxPrice = minPrice;
         this.isAutoExtension = isAutoExtension;
-        this.expireAt = expireAt;
+        this.expireAt = LocalDateTime.now().plusHours(expireAfter.getHour()).plusMinutes(expireAfter.getMinute());
     }
-    public static Auction of(Item item, User seller, int minPrice, boolean isAutoExtension, LocalDateTime expireAt) {
-        return new Auction(item, seller, minPrice, isAutoExtension, expireAt);
+    public static Auction of(Item item, User seller, int minPrice, boolean isAutoExtension, LocalTime expireAfter) {
+        return new Auction(item, seller, minPrice, isAutoExtension, expireAfter);
     }
     public void changeItem(Item item) {
         this.item = item;
