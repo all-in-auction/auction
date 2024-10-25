@@ -15,23 +15,26 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/auth")
+@RequestMapping("/api")
 public class AuthController {
 
     private final AuthService authService;
 
-    @PostMapping("/v1/signup")
+    @PostMapping("/v1/auth/signup")
     public ApiResponse<SignupResponseDto> signup(@Valid @RequestBody SignupRequestDto signupRequest) {
         return ApiResponse.ok(authService.createUser(signupRequest));
     }
 
-    @PostMapping("/v1/login")
+    @PostMapping("/v1/auth/login")
     public ApiResponse<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto loginRequestDto) {
         return ApiResponse.ok(authService.login(loginRequestDto));
     }
 
-    @PutMapping("/v1/signout")
-    public ApiResponse<Void> deleteUser(@AuthenticationPrincipal AuthUser authUser, @RequestBody SignoutRequest signoutRequest) {
+    @PutMapping("/v1/auth/signout")
+    public ApiResponse<Void> deactivateUser(
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestBody SignoutRequest signoutRequest) {
+
         authService.deactivateUser(authUser, signoutRequest);
         return ApiResponse.ok(null);
     }

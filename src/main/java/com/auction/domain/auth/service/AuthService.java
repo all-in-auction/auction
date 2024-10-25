@@ -59,13 +59,13 @@ public class AuthService {
         user.changeDeactivate();
     }
 
-    private void isDeactivateUser(User user) {
+    public void isDeactivateUser(User user) {
         if (!user.isActivate()) {
             throw new ApiException(ErrorStatus._NOT_FOUND_USER);
         }
     }
 
-    private void checkPassword(String password, String encodedPassword) {
+    public void checkPassword(String password, String encodedPassword) {
         if (!passwordEncoder.matches(password, encodedPassword)) {
             throw new ApiException(ErrorStatus._PERMISSION_DENIED);
         }
