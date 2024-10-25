@@ -38,7 +38,6 @@ public class Notification extends TimeStamped {
     public static Notification of(User user, String content, String relatedUrl, NotificationType type) {
         return new Notification(user, content, relatedUrl, type);
     }
-
     public void read() {
         this.isRead = true;
     }
