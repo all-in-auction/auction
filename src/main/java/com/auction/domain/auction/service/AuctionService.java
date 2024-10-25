@@ -218,14 +218,12 @@ public class AuctionService {
                     log.debug("topBid : {}", auctionHistory);
 
                     // TODO(Auction) : 경매 낙찰로 인한 알림 (V2)
-//                    notificationService.send(auctionHistory.getUser(), Notification.NotificationType.AUCTION, "경매가 낙찰되었습니다.", "url");
 
                     // TODO(Auction) : 경매 패찰로 인한 알림 (V2)
                     // 패찰한 사용자 환불 처리 (메시지큐에 던짐)
                     List<AuctionHistoryDto> list = auctionHistoryRepository
                             .findAuctionHistoryByAuctionId(auctionId, auctionHistory.getUser().getId());
                     log.debug("refund list : {}", list.toString());
-//                    notificationService.send(auctionHistory.getUser(), Notification.NotificationType.AUCTION, "경매가 패찰되었습니다.", "url");
 
                     for (AuctionHistoryDto auctionHistoryDto : list) {
                         auctionPublisher.refundPublisher(RefundEvent.from(auctionId, auctionHistoryDto));

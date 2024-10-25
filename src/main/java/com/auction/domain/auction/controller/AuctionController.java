@@ -32,7 +32,7 @@ public class AuctionController {
      */
     @PostMapping("/v1/auctions")
     public ApiResponse<AuctionCreateResponseDto> createAuction(@AuthenticationPrincipal AuthUser authUser,
-                                                               @RequestBody AuctionCreateRequestDto requestDto) {
+                                                               @Valid @RequestBody AuctionCreateRequestDto requestDto) {
         return ApiResponse.created(auctionService.createAuction(authUser, requestDto));
     }
 
@@ -68,7 +68,7 @@ public class AuctionController {
     @PutMapping("/v1/auctions/{auctionId}")
     public ApiResponse<AuctionResponseDto> updateAuctionItem(@AuthenticationPrincipal AuthUser authUser,
                                                              @PathVariable Long auctionId,
-                                                             @RequestBody AuctionItemChangeRequestDto requestDto) {
+                                                             @Valid @RequestBody AuctionItemChangeRequestDto requestDto) {
         return ApiResponse.ok(auctionService.updateAuctionItem(authUser, auctionId, requestDto));
     }
 
