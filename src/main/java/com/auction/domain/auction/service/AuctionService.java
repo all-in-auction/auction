@@ -77,7 +77,7 @@ public class AuctionService {
                 requestDto.getItem().getDescription(),
                 ItemCategory.of(requestDto.getItem().getCategory()));
         Item savedItem = itemRepository.save(item);
-        Auction auction = Auction.of(savedItem, User.fromAuthUser(authUser), requestDto.getMinPrice(), requestDto.isAutoExtension(), requestDto.getExpireAt());
+        Auction auction = Auction.of(savedItem, User.fromAuthUser(authUser), requestDto.getMinPrice(), requestDto.isAutoExtension(), requestDto.getExpireAfter());
         Auction savedAuction = auctionRepository.save(auction);
 
         auctionPublisher.auctionPublisher(
