@@ -105,7 +105,7 @@ public class AuctionController {
      * @param bidCreateRequestDto
      * @return
      */
-    @PostMapping("/v1/auctions/{auctionId}/bid")
+    @PostMapping("/v2/auctions/{auctionId}/bid")
     public ApiResponse<BidCreateResponseDto> createBid(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable("auctionId") Long auctionId,

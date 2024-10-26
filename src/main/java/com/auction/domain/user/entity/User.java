@@ -2,7 +2,6 @@ package com.auction.domain.user.entity;
 
 import com.auction.common.entity.AuthUser;
 import com.auction.common.entity.TimeStamped;
-import com.auction.domain.auction.entity.AuctionHistory;
 import com.auction.domain.auth.dto.request.SignupRequestDto;
 import com.auction.domain.user.dto.request.UserUpdateRequestDto;
 import com.auction.domain.user.enums.UserRole;
@@ -11,8 +10,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 @Entity
@@ -38,9 +35,6 @@ public class User extends TimeStamped {
 
     private boolean activate;
     private LocalDateTime deletedAt;
-
-    @OneToMany(mappedBy = "user")
-    private List<AuctionHistory> historyList = new ArrayList<>();
 
     public User(String encodedPassword, SignupRequestDto requestDto) {
         this.email = requestDto.getEmail();
