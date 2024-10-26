@@ -212,6 +212,10 @@ public class AuctionService {
             // TODO(Auction) : 경매 유찰로 인한 알림 (V2)
         } else {
             // 경매 낙찰
+            // 판매자 포인트 증가
+            pointService.increasePoint(auction.getSeller().getId(), auction.getMaxPrice());
+            pointHistoryService.createPointHistory(auction.getSeller(), auction.getMaxPrice(), PaymentType.RECEIVE);
+
             // 구매자 경매 이력 수정
             String buyerId = (String) result.iterator().next();
             User buyer = userService.getUser(Long.parseLong(buyerId));
