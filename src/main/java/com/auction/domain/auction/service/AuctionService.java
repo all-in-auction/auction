@@ -21,7 +21,6 @@ import com.auction.domain.auction.event.publish.AuctionPublisher;
 import com.auction.domain.auction.repository.AuctionRepository;
 import com.auction.domain.auction.repository.ItemRepository;
 import com.auction.domain.deposit.service.DepositService;
-import com.auction.domain.notification.entity.Notification;
 import com.auction.domain.notification.enums.NotificationType;
 import com.auction.domain.notification.service.NotificationService;
 import com.auction.domain.point.repository.PointRepository;
@@ -294,6 +293,7 @@ public class AuctionService {
         return rankingList;
     }
 
+    // 아침 6시에 경매 랭킹 초기화
     @Scheduled(cron = "0 0 6 * * *")
     @Transactional
     public void resetRankings() {

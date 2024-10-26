@@ -6,7 +6,6 @@ import com.auction.domain.notification.enums.NotificationType;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
