@@ -9,6 +9,7 @@ import com.auction.domain.auction.dto.request.AuctionCreateRequestDto;
 import com.auction.domain.auction.dto.request.AuctionItemChangeRequestDto;
 import com.auction.domain.auction.dto.request.BidCreateRequestDto;
 import com.auction.domain.auction.dto.response.AuctionCreateResponseDto;
+import com.auction.domain.auction.dto.response.AuctionRankingResponseDto;
 import com.auction.domain.auction.dto.response.AuctionResponseDto;
 import com.auction.domain.auction.dto.response.BidCreateResponseDto;
 import com.auction.domain.auction.entity.Auction;
@@ -20,7 +21,6 @@ import com.auction.domain.auction.event.publish.AuctionPublisher;
 import com.auction.domain.auction.repository.AuctionRepository;
 import com.auction.domain.auction.repository.ItemRepository;
 import com.auction.domain.deposit.service.DepositService;
-import com.auction.domain.notification.entity.Notification;
 import com.auction.domain.notification.service.NotificationService;
 import com.auction.domain.point.repository.PointRepository;
 import com.auction.domain.point.service.PointService;
@@ -34,6 +34,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,6 +61,7 @@ public class AuctionService {
     private final RedisTemplate<String, Object> redisTemplate;
 
     public static final String AUCTION_HISTORY_PREFIX = "auction:bid:";
+    public static final String AUCTION_RANKING_PREFIX = "auction:ranking:";
 
     private Auction getAuction(long auctionId) {
         return auctionRepository.findByAuctionId(auctionId)
@@ -150,7 +152,7 @@ public class AuctionService {
         }
 
         String auctionHistoryKey = AUCTION_HISTORY_PREFIX + auction.getId();
-        
+
         // 입찰가 변환 : ex) 15999 -> 15000
         int bidPrice = (bidCreateRequestDto.getPrice() / 1000) * 1000;
         validBidPrice(bidPrice, auction, auctionHistoryKey);
@@ -188,6 +190,8 @@ public class AuctionService {
 
         auction.changeMaxPrice(bidPrice);
         auctionRepository.save(auction);
+
+        redisTemplate.opsForZSet().incrementScore(AUCTION_RANKING_PREFIX, String.valueOf(auctionId), 1);
 
         return BidCreateResponseDto.of(user.getId(), auction);
     }
@@ -250,6 +254,34 @@ public class AuctionService {
         }
         // redis key 삭제
         redisTemplate.delete(auctionHistoryKey);
+        redisTemplate.opsForZSet().remove(AUCTION_RANKING_PREFIX, String.valueOf(auctionId));
+    }
+
+    public List<AuctionRankingResponseDto> getRankingList() {
+        Set<ZSetOperations.TypedTuple<Object>> rankings =
+                redisTemplate.opsForZSet().reverseRangeWithScores(AUCTION_RANKING_PREFIX, 0, 9);
+
+        List<AuctionRankingResponseDto> rankingList = new ArrayList<>();
+
+        if(rankings != null) {
+            int rank = 1;
+            for (ZSetOperations.TypedTuple<Object> ranking : rankings) {
+                long auctionId = Long.parseLong(ranking.getValue().toString());
+                Auction auction = getAuction(auctionId);
+                Integer bidCount = ranking.getScore().intValue();
+
+                rankingList.add(AuctionRankingResponseDto.of(rank++, auctionId, bidCount,
+                        auction.getItem().getName(), auction.getMaxPrice(),
+                        auction.getExpireAt().toString()));
+            }
+        }
+        return rankingList;
+    }
+
+    @Scheduled(cron = "0 0 6 * * *")
+    @Transactional
+    public void resetRankings() {
+        redisTemplate.delete(AUCTION_RANKING_PREFIX);
     }
 
     private void validBidPrice(int bidPrice, Auction auction, String auctionHistoryKey) {

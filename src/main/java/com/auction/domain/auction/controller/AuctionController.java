@@ -6,6 +6,7 @@ import com.auction.domain.auction.dto.request.AuctionCreateRequestDto;
 import com.auction.domain.auction.dto.request.AuctionItemChangeRequestDto;
 import com.auction.domain.auction.dto.request.BidCreateRequestDto;
 import com.auction.domain.auction.dto.response.AuctionCreateResponseDto;
+import com.auction.domain.auction.dto.response.AuctionRankingResponseDto;
 import com.auction.domain.auction.dto.response.AuctionResponseDto;
 import com.auction.domain.auction.dto.response.BidCreateResponseDto;
 import com.auction.domain.auction.service.AuctionService;
@@ -17,6 +18,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -112,5 +115,14 @@ public class AuctionController {
             @Valid @RequestBody BidCreateRequestDto bidCreateRequestDto
     ) {
         return ApiResponse.ok(auctionService.createBid(authUser, auctionId, bidCreateRequestDto));
+    }
+
+    /**
+     * 경매 랭킹 조회
+     * @return List<AuctionRankingResponseDto>
+     */
+    @GetMapping("/v2/auctions/rankings")
+    public ApiResponse<List<AuctionRankingResponseDto>> getRankingList() {
+        return ApiResponse.ok(auctionService.getRankingList());
     }
 }
