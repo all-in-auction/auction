@@ -1,7 +1,10 @@
 package com.auction.domain.notification.service;
 
+import com.auction.common.entity.AuthUser;
+import com.auction.domain.notification.dto.GetNotificationListDto;
 import com.auction.domain.notification.dto.NotificationDto;
 import com.auction.domain.notification.entity.Notification;
+import com.auction.domain.notification.enums.NotificationType;
 import com.auction.domain.notification.repository.NotificationRepository;
 import com.auction.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -9,8 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import static com.auction.domain.notification.entity.Notification.NotificationType;
-import static com.auction.domain.notification.entity.Notification.of;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -38,9 +40,15 @@ public class NotificationService {
 
     @Transactional
     public void sendNotification(User receiver, NotificationType notificationType, String content, String relatedUrl) {
-        Notification notification = notificationRepository.save(of(receiver, content, relatedUrl, notificationType));
+        Notification notification = notificationRepository.save(
+                Notification.of(receiver, content, relatedUrl, notificationType));
 
         // redis 이벤트 발행
         redisMessageService.publish(receiver.getId().toString(), NotificationDto.from(notification));
+    }
+
+    @Transactional
+    public List<GetNotificationListDto> getNotificationList(AuthUser authUser, String type) {
+        return notificationRepository.getNotificationListByUserIdAndType(authUser.getId(), type);
     }
 }

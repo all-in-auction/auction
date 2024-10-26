@@ -1,6 +1,7 @@
 package com.auction.domain.notification.entity;
 
 import com.auction.common.entity.TimeStamped;
+import com.auction.domain.notification.enums.NotificationType;
 import com.auction.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -40,9 +41,5 @@ public class Notification extends TimeStamped {
     }
     public void read() {
         this.isRead = true;
-    }
-
-    public enum NotificationType {
-        AUCTION, REVIEW
     }
 }

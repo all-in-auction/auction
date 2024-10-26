@@ -21,6 +21,8 @@ import com.auction.domain.auction.event.publish.AuctionPublisher;
 import com.auction.domain.auction.repository.AuctionRepository;
 import com.auction.domain.auction.repository.ItemRepository;
 import com.auction.domain.deposit.service.DepositService;
+import com.auction.domain.notification.entity.Notification;
+import com.auction.domain.notification.enums.NotificationType;
 import com.auction.domain.notification.service.NotificationService;
 import com.auction.domain.point.repository.PointRepository;
 import com.auction.domain.point.service.PointService;
@@ -30,6 +32,7 @@ import com.auction.domain.user.entity.User;
 import com.auction.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -59,6 +62,9 @@ public class AuctionService {
     private final NotificationService notificationService;
 
     private final RedisTemplate<String, Object> redisTemplate;
+
+    @Value("${notification.related-url.auction}")
+    private String relatedAuctionUrl;
 
     public static final String AUCTION_HISTORY_PREFIX = "auction:bid:";
     public static final String AUCTION_RANKING_PREFIX = "auction:ranking:";
@@ -215,8 +221,9 @@ public class AuctionService {
 
         Set<Object> result = redisTemplate.opsForZSet().reverseRange(auctionHistoryKey, 0, 0);
         if (result == null || result.isEmpty()) {
-            // 경매 유찰
-            // TODO(Auction) : 경매 유찰로 인한 알림 (V2)
+            // 경매 유찰 알림
+            notificationService.sendNotification(auction.getSeller(), NotificationType.AUCTION,
+                    "경매 아이디 " + auctionId + "이(가) 유찰되었습니다.", relatedAuctionUrl + auctionId);
         } else {
             // 경매 낙찰
             // 구매자 경매 이력 수정
@@ -229,9 +236,12 @@ public class AuctionService {
             depositService.deleteDeposit(buyer.getId(), auctionId);
             log.debug("topBidUser : {}", buyer.getId());
 
-            // TODO(Auction) : 경매 낙찰로 인한 알림 (V2)
+            // 경매 낙찰 알림
+            notificationService.sendNotification(buyer,
+                    NotificationType.AUCTION,
+                    "입찰한 " + auction.getItem().getName() + "이(가) 낙찰되었습니다!",
+                    relatedAuctionUrl + auctionId);
 
-            // TODO(Auction) : 경매 패찰로 인한 알림 (V2)
             // 패찰한 사용자 환불 처리 (메시지큐에 던짐)
             Set<ZSetOperations.TypedTuple<Object>> typedTuples
                     = redisTemplate.opsForZSet().reverseRangeWithScores(auctionHistoryKey, 1, -1);
@@ -244,6 +254,12 @@ public class AuctionService {
                             String userId = (String) tuple.getValue();
                             int price = tuple.getScore().intValue();
                             list.add(new AuctionHistoryDto(Long.parseLong(userId), price));
+
+                            // 패찰 알림
+                            notificationService.sendNotification(userService.getUser(Long.parseLong(userId)),
+                                    NotificationType.AUCTION,
+                                    "입찰한 " + auction.getItem().getName() + "이(가) 패찰되었습니다.",
+                                    relatedAuctionUrl + auctionId);
                         }
                     });
             log.debug("refund list : {}", list.toString());

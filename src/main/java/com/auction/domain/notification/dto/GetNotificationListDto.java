@@ -16,8 +16,8 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class NotificationDto {
-    private Long receiverId;
+public class GetNotificationListDto {
+
     private String content;
     private String relatedUrl;
     private boolean isRead;
@@ -27,8 +27,8 @@ public class NotificationDto {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
-    public static NotificationDto from(Notification notification) {
-        return new NotificationDto(notification.getReceiver().getId(), notification.getContent(),
-                notification.getRelatedUrl(), notification.isRead(), notification.getType(),notification.getCreatedAt());
+    public static GetNotificationListDto from(Notification notification) {
+        return new GetNotificationListDto(notification.getContent(), notification.getRelatedUrl(),
+                notification.isRead(),notification.getType(), notification.getCreatedAt());
     }
 }
