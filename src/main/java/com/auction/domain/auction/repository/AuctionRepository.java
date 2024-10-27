@@ -17,4 +17,6 @@ public interface AuctionRepository extends JpaRepository<Auction, Long>, Auction
 
     @Query("SELECT a.item.id FROM Auction a WHERE a.seller = :user")
     List<Long> findItemIdListBySeller(@Param("user") User user);
+
+    List<Auction> findByBuyer(User buyer);
 }
