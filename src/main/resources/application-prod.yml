@@ -1,0 +1,51 @@
+spring:
+  datasource:
+    url: jdbc:mysql://auction-rds-db.cnya6424giqr.ap-northeast-2.rds.amazonaws.com:3306/auction
+    username: admin
+    password: ${PROD_DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  thymeleaf:
+    cache: false
+    check-template-location: true
+    prefix: classpath:/templates/
+    suffix: .html
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 3s
+          max-interval: 10s
+          max-attempts: 3
+          multiplier: 2
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: 6379
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        show_sql: true
+        format_sql: true
+        use_sql_comments: true
+
+payment:
+  client:
+    key: ${PAYMENT_CLIENT_KEY}
+  secret:
+    key: ${PAYMENT_SECRET_KEY}
+
+server:
+  error:
+    include-message: always
