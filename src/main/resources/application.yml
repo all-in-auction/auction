@@ -3,6 +3,8 @@ spring:
     active: dev
   config:
     import: optional:file:.env[.properties]
+#  jpa:
+#    open-in-view: false
 
 cloud:
   aws:
