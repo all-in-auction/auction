@@ -29,8 +29,8 @@ public class AuctionConsumer {
     @RabbitListener(queues = "auction.queue")
     public void auctionConsumer(String message) {
         try {
+            log.info("AuctionEvent = {}", message);
             AuctionEvent auctionEvent = objectMapper.readValue(message, AuctionEvent.class);
-            log.info("AuctionEvent = {}", auctionEvent.getAuctionId());
             auctionService.closeAuction(auctionEvent);
         } catch (JsonProcessingException e) {
             log.error(e.getMessage());
@@ -40,8 +40,8 @@ public class AuctionConsumer {
     @RabbitListener(queues = "refund.queue")
     public void refundConsumer(String message) {
         try {
+            log.info("RefundEvent = {}", message);
             RefundEvent refundEvent = objectMapper.readValue(message, RefundEvent.class);
-            log.info("RefundEvent = {}", refundEvent.getAuctionId());
             depositService.deleteDeposit(refundEvent.getUserId(), refundEvent.getAuctionId());
             pointService.increasePoint(refundEvent.getUserId(), refundEvent.getDeposit());
             pointHistoryService.createPointHistory(User.fromUserId(refundEvent.getUserId()), refundEvent.getDeposit(), PaymentType.REFUND);
