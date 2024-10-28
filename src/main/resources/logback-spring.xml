@@ -13,12 +13,16 @@
         </filter>
         <file>./log/auction999_logback_${DATETIME}.log</file>
         <encoder>
-            <pattern>{"@timestamp":"%d{yyyy-MM-dd'T'HH:mm:ss.SSSZ}", "level":"%level", "service":"auction999", "trace": "%X{X-B3-TraceId:-}", "span": "%X{X-B3-SpanId:-}", "thread":"%thread", "logger":"%logger", "message":"%msg"}%n</pattern>
+            <pattern>{"@timestamp":"%d{yyyy-MM-dd'T'HH:mm:ss.SSSZ}", "level":"%level", "service":"auction999", "trace":
+                "%X{X-B3-TraceId:-}", "span": "%X{X-B3-SpanId:-}", "thread":"%thread", "logger":"%logger",
+                "message":"%msg"}%n
+            </pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>./log/auction999_logback_%d{yyyy-MM-dd}_%i.zip</fileNamePattern>
             <maxHistory>10</maxHistory>
-            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFileNamingAndTriggeringPolicy">
+            <timeBasedFileNamingAndTriggeringPolicy
+                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFileNamingAndTriggeringPolicy">
                 <maxFileSize>50MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
@@ -32,12 +36,16 @@
         </filter>
         <file>./log/auction999_error_logback_${DATETIME}.log</file>
         <encoder>
-            <pattern>{"@timestamp":"%d{yyyy-MM-dd'T'HH:mm:ss.SSSZ}", "level":"%level", "service":"auction999", "trace": "%X{X-B3-TraceId:-}", "span": "%X{X-B3-SpanId:-}", "thread":"%thread", "logger":"%logger", "message":"%msg"}%n</pattern>
+            <pattern>{"@timestamp":"%d{yyyy-MM-dd'T'HH:mm:ss.SSSZ}", "level":"%level", "service":"auction999", "trace":
+                "%X{X-B3-TraceId:-}", "span": "%X{X-B3-SpanId:-}", "thread":"%thread", "logger":"%logger",
+                "message":"%msg"}%n
+            </pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>./log/auction999_error_logback_%d{yyyy-MM-dd}_%i.zip</fileNamePattern>
             <maxHistory>10</maxHistory>
-            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFileNamingAndTriggeringPolicy">
+            <timeBasedFileNamingAndTriggeringPolicy
+                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFileNamingAndTriggeringPolicy">
                 <maxFileSize>50MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
@@ -48,6 +56,12 @@
             <pattern>${CONSOLE_LOG_PATTERN}</pattern>
         </encoder>
     </appender>
+
+    <springProfile name="local">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
 
     <springProfile name="dev">
         <!-- DEBUG 로그도 보고 싶다면 주석 해제
