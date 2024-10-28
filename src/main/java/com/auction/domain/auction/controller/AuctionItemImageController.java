@@ -18,10 +18,6 @@ import java.util.List;
 public class AuctionItemImageController {
 
     private final AuctionItemImageService auctionItemImageService;
-    
-    /*
-    @Todo 사진 조회 + auction 등록할 때 같이?
-     */
 
     /**
      * 경매 물품 사진 등록

@@ -9,6 +9,7 @@ import com.auction.domain.auth.dto.request.SignoutRequest;
 import com.auction.domain.auth.dto.request.SignupRequestDto;
 import com.auction.domain.auth.dto.response.LoginResponseDto;
 import com.auction.domain.auth.dto.response.SignupResponseDto;
+import com.auction.domain.notification.service.NotificationService;
 import com.auction.domain.point.service.PointService;
 import com.auction.domain.user.entity.User;
 import com.auction.domain.user.repository.UserRepository;
@@ -25,6 +26,7 @@ public class AuthService {
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final PointService pointService;
+    private final NotificationService notificationService;
 
     @Transactional
     public SignupResponseDto createUser(SignupRequestDto signupRequest) {
@@ -44,6 +46,8 @@ public class AuthService {
         checkPassword(loginRequestDto.getPassword(), user.getPassword());
 
         String bearerToken = jwtUtil.createToken(user.getId(), user.getEmail(), user.getAuthority());
+
+        notificationService.subscribe(user.getId().toString());
 
         return LoginResponseDto.of(bearerToken);
     }
