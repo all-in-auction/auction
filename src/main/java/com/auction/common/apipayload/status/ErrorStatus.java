@@ -43,7 +43,7 @@ public enum ErrorStatus implements BaseCode {
     _ALREADY_USED_COUPON(HttpStatus.BAD_REQUEST, "400", "이미 사용된 쿠폰입니다."),
     _EXPIRED_COUPON(HttpStatus.BAD_REQUEST, "400", "유효기간이 지난 쿠폰입니다."),
     _SOLD_OUT_COUPON(HttpStatus.CONFLICT, "409", "준비된 쿠폰 수량이 모두 소진되었습니다."),
-
+    _ALREADY_CLAIMED_COUPON(HttpStatus.BAD_REQUEST, "400", "이미 수령한 쿠폰입니다."),
     ;
 
     private HttpStatus httpStatus;

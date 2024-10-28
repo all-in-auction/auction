@@ -8,6 +8,7 @@ import com.auction.domain.coupon.dto.response.CouponClaimResponseDto;
 import com.auction.domain.coupon.dto.response.CouponCreateResponseDto;
 import com.auction.domain.coupon.entity.Coupon;
 import com.auction.domain.coupon.repository.CouponRepository;
+import com.auction.domain.coupon.repository.CouponUserRepository;
 import com.auction.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CouponService {
     private final CouponRepository couponRepository;
+    private final CouponUserRepository couponUserRepository;
 
     private final CouponSubService couponSubService;
     private final CouponUserService couponUserService;
@@ -39,11 +41,16 @@ public class CouponService {
 
         User user = User.fromAuthUser(authUser);
 
-        // 사용자 쿠폰 생성
-        couponUserService.createCouponUser(user, coupon);
+        // 쿠폰 중복 발급 불가
+        couponUserRepository.findByUserAndCoupon(user, coupon).ifPresent(t -> {
+            throw new ApiException(ErrorStatus._ALREADY_CLAIMED_COUPON);
+        });
 
-        // 쿠폰 수량 감소 (동시성 제어 x)
+        // 쿠폰 수량 감소
         coupon.decrementAmount();
+
+        // 쿠폰 발급 후 사용자 쿠폰 생성
+        couponUserService.createCouponUser(user, coupon);
 
         return CouponClaimResponseDto.from(coupon);
     }
