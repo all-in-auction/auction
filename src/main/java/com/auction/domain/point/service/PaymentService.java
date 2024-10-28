@@ -1,11 +1,11 @@
-package com.auction.domain.payment.service;
+package com.auction.domain.point.service;
 
 import com.auction.common.apipayload.status.ErrorStatus;
 import com.auction.common.exception.ApiException;
-import com.auction.domain.payment.entity.Payment;
-import com.auction.domain.payment.repository.PaymentRepository;
+import com.auction.domain.coupon.entity.CouponUser;
+import com.auction.domain.point.entity.Payment;
+import com.auction.domain.point.repository.PaymentRepository;
 import com.auction.domain.user.entity.User;
-import com.auction.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,12 +16,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
-    private final UserRepository userRepository;
 
     @Transactional
-    public void createPayment(String orderId, User user, int amount) {
-        Payment payment = new Payment(orderId, user, amount);
+    public void createPayment(String orderId, User user, int pointAmount,
+                              int paymentAmount, CouponUser couponUser) {
+        Payment payment = Payment.of(orderId, user, pointAmount, paymentAmount, couponUser);
         paymentRepository.save(payment);
+    }
+
+    public void validateAmount(int amount) {
+        if (amount < 1000 || amount % 1000 != 0) {
+            throw new ApiException(ErrorStatus._INVALID_AMOUNT_REQUEST);
+        }
     }
 
     public Payment getPayment(String orderId) {
