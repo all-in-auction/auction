@@ -39,7 +39,14 @@ public class WebSecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/**","/error", "/style.css", "/payment/**", "/api/v1/points/buy/confirm").permitAll()
+                        .requestMatchers(
+                                "/api/v1/auth/**",
+                                "/error",
+                                "/style.css",
+                                "/payment/**",
+                                "/api/v1/points/buy/confirm",
+                                "/actuator/prometheus"
+                        ).permitAll()
                         .requestMatchers("/api/v2/admin/**").hasAuthority(UserRole.Authority.ADMIN)
                         .anyRequest().authenticated()
                 )
