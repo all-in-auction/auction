@@ -38,7 +38,13 @@ out/
 
 /src/main/generated/
 
+### .yml ###
+application-local.yml
+
 ### .env ###
 .env
 
 .docker/
+
+### log ###
+**/*.log
