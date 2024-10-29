@@ -20,6 +20,12 @@ public class CouponSubService {
         Coupon coupon = couponRepository.findById(couponId)
                 .orElseThrow(() -> new ApiException(ErrorStatus._NOT_FOUND_COUPON));
 
+//        Coupon coupon = couponRepository.findByIdWithPessimisticLock(couponId)
+//                .orElseThrow(() -> new ApiException(ErrorStatus._NOT_FOUND_COUPON));
+
+//        Coupon coupon = couponRepository.findByIdWithOptimisticLock(couponId)
+//                .orElseThrow(() -> new ApiException(ErrorStatus._NOT_FOUND_COUPON));
+
         if (coupon.getExpireAt().isBefore(LocalDate.now())) {
             throw new ApiException(ErrorStatus._EXPIRED_COUPON);
         }

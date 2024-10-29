@@ -1,6 +1,7 @@
 package com.auction.domain.coupon.service;
 
 import com.auction.common.entity.AuthUser;
+import com.auction.common.exception.ApiException;
 import com.auction.domain.coupon.entity.Coupon;
 import com.auction.domain.coupon.repository.CouponRepository;
 import com.auction.domain.coupon.repository.CouponUserRepository;
@@ -15,17 +16,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 @ExtendWith(MockitoExtension.class)
 @SpringBootTest
+@Transactional
 class CouponServiceTest {
     @Autowired
     CouponRepository couponRepository;
@@ -37,10 +37,6 @@ class CouponServiceTest {
     CouponService couponService;
     @Autowired
     EntityManager entityManager;
-
-    @TestConfiguration
-    static class S3Config {
-    }
 
     @BeforeEach
     void beforeEach() {
@@ -78,8 +74,13 @@ class CouponServiceTest {
             final AuthUser authUser = new AuthUser(userId, "email", UserRole.USER);
             executorService.submit(() -> {
                 // 쿠폰 service 의 claim 함수를 호출
-                couponService.claimCoupon(authUser, 1L);
-                countDownLatch.countDown();
+                try {
+                    couponService.redissonClaimCoupon(authUser, 1L);
+                } catch (ApiException e) {
+                    System.out.println(e.getErrorCode().getReasonHttpStatus().getMessage());
+                } finally {
+                    countDownLatch.countDown();
+                }
             });
         }
         countDownLatch.await();
