@@ -31,6 +31,10 @@ public class Coupon {
     @Column(nullable = false)
     private int discountRate;
 
+    // 낙관적 락 사용시 추가
+//    @Version
+//    private int version;
+
     private Coupon(LocalDate expireAt, Integer amount, String name, int discountRate) {
         this.expireAt = expireAt;
         this.amount = amount;
@@ -48,8 +52,8 @@ public class Coupon {
 
         if (amount <= 0) {
             throw new ApiException(ErrorStatus._SOLD_OUT_COUPON);
-        } else {
-            amount--;
         }
+
+        amount--;
     }
 }
