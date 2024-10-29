@@ -13,16 +13,11 @@ import com.auction.domain.coupon.repository.CouponUserRepository;
 import com.auction.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.concurrent.TimeUnit;
-
 @Service
-@Transactional(readOnly = true)
 @RequiredArgsConstructor
 @Slf4j
 public class CouponService {
@@ -65,9 +60,11 @@ public class CouponService {
         return CouponClaimResponseDto.from(coupon);
     }
 
-    @DistributedLock(key = "#couponId")
-    public CouponClaimResponseDto redissonClaimCoupon(AuthUser authUser, Long couponId) {
-        Coupon coupon = couponSubService.getCoupon(couponId);
+    // 비관적 락 적용
+    @Transactional
+    public CouponClaimResponseDto claimCouponWithPessimisticLock(AuthUser authUser, Long couponId) {
+        Coupon coupon = couponRepository.findByIdWithPessimisticLock(couponId)
+                .orElseThrow(() -> new ApiException(ErrorStatus._NOT_FOUND_COUPON));
 
         if (coupon.getAmount() != null && coupon.getAmount() == 0) {
             throw new ApiException(ErrorStatus._SOLD_OUT_COUPON);
@@ -89,4 +86,55 @@ public class CouponService {
         return CouponClaimResponseDto.from(coupon);
     }
 
+    // 낙관적 락 적용
+    @Transactional
+    public CouponClaimResponseDto claimCouponWithOptimisticLock(AuthUser authUser, Long couponId) {
+        Coupon coupon = couponRepository.findByIdWithOptimisticLock(couponId)
+                .orElseThrow(() -> new ApiException(ErrorStatus._NOT_FOUND_COUPON));
+
+        if (coupon.getAmount() != null && coupon.getAmount() == 0) {
+            throw new ApiException(ErrorStatus._SOLD_OUT_COUPON);
+        }
+
+        User user = User.fromAuthUser(authUser);
+
+        // 쿠폰 중복 발급 불가
+        couponUserRepository.findByUserAndCoupon(user, coupon).ifPresent(t -> {
+            throw new ApiException(ErrorStatus._ALREADY_CLAIMED_COUPON);
+        });
+
+        // 쿠폰 수량 감소
+        coupon.decrementAmount();
+
+        // 쿠폰 발급 후 사용자 쿠폰 생성
+        couponUserService.createCouponUser(user, coupon);
+
+        return CouponClaimResponseDto.from(coupon);
+    }
+
+    // 분산락 적용
+    @DistributedLock(key = "#couponId")
+    public CouponClaimResponseDto claimCouponWithDistributedLock(AuthUser authUser, Long couponId) {
+        Coupon coupon = couponRepository.findById(couponId)
+                .orElseThrow(() -> new ApiException(ErrorStatus._NOT_FOUND_COUPON));
+
+        if (coupon.getAmount() != null && coupon.getAmount() == 0) {
+            throw new ApiException(ErrorStatus._SOLD_OUT_COUPON);
+        }
+
+        User user = User.fromAuthUser(authUser);
+
+        // 쿠폰 중복 발급 불가
+        couponUserRepository.findByUserAndCoupon(user, coupon).ifPresent(t -> {
+            throw new ApiException(ErrorStatus._ALREADY_CLAIMED_COUPON);
+        });
+
+        // 쿠폰 수량 감소
+        coupon.decrementAmount();
+
+        // 쿠폰 발급 후 사용자 쿠폰 생성
+        couponUserService.createCouponUser(user, coupon);
+
+        return CouponClaimResponseDto.from(coupon);
+    }
 }
