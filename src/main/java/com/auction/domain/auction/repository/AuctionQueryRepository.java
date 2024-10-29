@@ -7,4 +7,5 @@ import org.springframework.data.domain.Pageable;
 public interface AuctionQueryRepository {
     Page<AuctionResponseDto> findAllCustom(Pageable pageable);
     Page<AuctionResponseDto> findByCustomSearch(Pageable pageable, String name, String category, String sortBy);
+    Page<AuctionResponseDto> findByKeyword(Pageable pageable, String keyword, String category, String sortBy);
 }

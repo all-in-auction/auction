@@ -58,6 +58,12 @@ dependencies {
 
     // redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // elasticsearch
+    implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+
+    // data faker
+    implementation 'net.datafaker:datafaker:2.4.0'
 }
 
 tasks.named('test') {
