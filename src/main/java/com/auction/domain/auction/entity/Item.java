@@ -5,14 +5,10 @@ import com.auction.domain.auction.enums.ItemCategory;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
 
 @Getter
 @Entity
 @NoArgsConstructor
-@Document(indexName = "items")
 public class Item extends TimeStamped {
 
     @Id
@@ -20,15 +16,12 @@ public class Item extends TimeStamped {
     private Long id;
 
     @Column(nullable = false, length = 150)
-    @Field(type = FieldType.Text)
     private String name;
 
     @Column(length = 500)
-    @Field(type = FieldType.Text)
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Field(type = FieldType.Keyword)
     private ItemCategory category;
 
     @OneToOne(mappedBy = "item", cascade = CascadeType.ALL)

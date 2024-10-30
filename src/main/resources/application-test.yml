@@ -23,7 +23,7 @@ spring:
           multiplier: 2
 
   elasticsearch:
-    uris: http://localhost:9200
+    uris: ${ELASTICSEARCH_URIS}
 
   data:
     redis:
