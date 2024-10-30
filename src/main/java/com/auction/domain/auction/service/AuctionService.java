@@ -1,5 +1,6 @@
 package com.auction.domain.auction.service;
 
+import com.auction.common.annotation.DistributedLock;
 import com.auction.common.apipayload.status.ErrorStatus;
 import com.auction.common.entity.AuthUser;
 import com.auction.common.exception.ApiException;
@@ -45,7 +46,6 @@ import java.util.*;
 
 @Slf4j
 @Service
-@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class AuctionService {
     private final ItemRepository itemRepository;
@@ -103,11 +103,13 @@ public class AuctionService {
         return AuctionCreateResponseDto.from(savedAuction);
     }
 
+    @Transactional(readOnly = true)
     public AuctionResponseDto getAuction(Long auctionId) {
         Auction auctionItem = getAuctionById(auctionId);
         return AuctionResponseDto.from(auctionItem);
     }
 
+    @Transactional(readOnly = true)
     public Page<AuctionResponseDto> getAuctionList(Pageable pageable) {
         return auctionRepository.findAllCustom(pageable);
     }
@@ -139,11 +141,12 @@ public class AuctionService {
         return "물품이 삭제되었습니다.";
     }
 
+    @Transactional(readOnly = true)
     public Page<AuctionResponseDto> searchAuctionItems(Pageable pageable, String name, String category, String sortBy) {
         return auctionRepository.findByCustomSearch(pageable, name, category, sortBy);
     }
 
-    @Transactional
+    @DistributedLock(key = "T(java.lang.String).format('Auction%d', #auctionId)")
     public BidCreateResponseDto createBid(AuthUser authUser, long auctionId, BidCreateRequestDto bidCreateRequestDto) {
         User user = User.fromAuthUser(authUser);
         Auction auction = getAuction(auctionId);
@@ -276,6 +279,7 @@ public class AuctionService {
         redisTemplate.opsForZSet().remove(AUCTION_RANKING_PREFIX, String.valueOf(auctionId));
     }
 
+    @Transactional(readOnly = true)
     public List<AuctionRankingResponseDto> getRankingList() {
         Set<ZSetOperations.TypedTuple<Object>> rankings =
                 redisTemplate.opsForZSet().reverseRangeWithScores(AUCTION_RANKING_PREFIX, 0, 9);
