@@ -193,6 +193,22 @@ public class AuctionService {
         );
         depositService.placeDeposit(user.getId(), auctionId, bidPrice);
 
+        // reids zset 에서 이전 최고 입찰 구매자 보증금 환불
+        Set<ZSetOperations.TypedTuple<Object>> typedTuples =
+                redisTemplate.opsForZSet().reverseRangeWithScores(auctionHistoryKey, 0, 0);
+        Optional.ofNullable(typedTuples)
+                .filter(tuples -> !tuples.isEmpty())
+                .ifPresent(tuples -> {
+                    for (ZSetOperations.TypedTuple<Object> tuple : tuples) {
+                        long userId = Long.parseLong(String.valueOf(tuple.getValue()));
+                        int price = Objects.requireNonNull(tuple.getScore()).intValue();
+                        if(userId != user.getId()) {
+                            AuctionHistoryDto auctionHistoryDto = AuctionHistoryDto.of(userId, price);
+                            auctionPublisher.refundPublisher(RefundEvent.from(auctionId, auctionHistoryDto));
+                        }
+                    }
+                });
+
         // redis zset 에 입찰 기록 저장
         redisTemplate.opsForZSet().add(auctionHistoryKey, user.getId().toString(), bidPrice);
 
@@ -247,32 +263,6 @@ public class AuctionService {
                     NotificationType.AUCTION,
                     "입찰한 " + auction.getItem().getName() + "이(가) 낙찰되었습니다!",
                     relatedAuctionUrl + auctionId);
-
-            // 패찰한 사용자 환불 처리 (메시지큐에 던짐)
-            Set<ZSetOperations.TypedTuple<Object>> typedTuples
-                    = redisTemplate.opsForZSet().reverseRangeWithScores(auctionHistoryKey, 1, -1);
-
-            List<AuctionHistoryDto> list = new ArrayList<>();
-            Optional.ofNullable(typedTuples)
-                    .filter(tuples -> !tuples.isEmpty())
-                    .ifPresent(tuples -> {
-                        for (ZSetOperations.TypedTuple<Object> tuple : tuples) {
-                            String userId = (String) tuple.getValue();
-                            int price = tuple.getScore().intValue();
-                            list.add(new AuctionHistoryDto(Long.parseLong(userId), price));
-
-                            // 패찰 알림
-                            notificationService.sendNotification(userService.getUser(Long.parseLong(userId)),
-                                    NotificationType.AUCTION,
-                                    "입찰한 " + auction.getItem().getName() + "이(가) 패찰되었습니다.",
-                                    relatedAuctionUrl + auctionId);
-                        }
-                    });
-            log.debug("refund list : {}", list.toString());
-
-            for (AuctionHistoryDto auctionHistoryDto : list) {
-                auctionPublisher.refundPublisher(RefundEvent.from(auctionId, auctionHistoryDto));
-            }
         }
         // redis key 삭제
         redisTemplate.delete(auctionHistoryKey);
