@@ -302,7 +302,8 @@ public class AuctionService {
         Long size = redisTemplate.opsForZSet().zCard(auctionHistoryKey);
         if (bidPrice < auction.getMaxPrice() // 입찰가가 현재 최대 입찰가보다 낮거나
                 || (bidPrice == auction.getMaxPrice() && size != null && size != 0)) { // 최대 입찰가와 같으면
-            throw new ApiException(ErrorStatus._INVALID_LESS_THAN_MAX_PRICE);
+            // TODO(auction) : 테스트 후 주석 해제
+//            throw new ApiException(ErrorStatus._INVALID_LESS_THAN_MAX_PRICE);
         }
     }
 }
