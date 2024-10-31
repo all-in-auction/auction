@@ -3,6 +3,8 @@ spring:
     active: dev
   config:
     import: optional:file:.env[.properties]
+#  jpa:
+#    open-in-view: false
 
 cloud:
   aws:
@@ -19,3 +21,9 @@ cloud:
 jwt:
   secret:
     key: ${JWT_SECRET_KEY}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "prometheus"

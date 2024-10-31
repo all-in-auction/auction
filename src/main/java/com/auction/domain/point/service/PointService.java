@@ -3,13 +3,13 @@ package com.auction.domain.point.service;
 import com.auction.common.apipayload.status.ErrorStatus;
 import com.auction.common.entity.AuthUser;
 import com.auction.common.exception.ApiException;
-import com.auction.domain.payment.entity.Payment;
-import com.auction.domain.payment.service.PaymentService;
 import com.auction.domain.point.dto.request.ConvertRequestDto;
 import com.auction.domain.point.dto.response.ChargeResponseDto;
 import com.auction.domain.point.dto.response.ConvertResponseDto;
+import com.auction.domain.point.entity.Payment;
 import com.auction.domain.point.entity.Point;
 import com.auction.domain.point.repository.PointRepository;
+import com.auction.domain.pointHistory.entity.PointHistory;
 import com.auction.domain.pointHistory.enums.PaymentType;
 import com.auction.domain.pointHistory.service.PointHistoryService;
 import com.auction.domain.user.entity.User;
@@ -27,6 +27,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -49,15 +50,19 @@ public class PointService {
         String orderId = response.get("orderId").toString();
         Payment payment = paymentService.getPayment(orderId);
         User user = payment.getUser();
+        Point point = pointRepository.findByUser(user).orElseThrow(() -> new ApiException(ErrorStatus._NOT_FOUND_USER));
 
         // point history 생성 및 저장
-        pointHistoryService.createPointHistory(user, payment.getAmount(), PaymentType.CHARGE);
+        PointHistory pointHistory = pointHistoryService.createPointHistory(user, payment.getPointAmount(), PaymentType.CHARGE);
+
+        // coupon 사용 저장
+        Optional.ofNullable(payment.getCouponUser())
+                .ifPresent(couponUser -> couponUser.useCoupon(pointHistory));
 
         // point 보유량 변화
-        Point point = pointRepository.findByUser(user).orElseThrow(() -> new ApiException(ErrorStatus._NOT_FOUND_USER));
-        point.addPoint(payment.getAmount());
+        point.addPoint(payment.getPointAmount());
 
-        return new ChargeResponseDto(payment.getAmount(), point.getPointAmount());
+        return new ChargeResponseDto(payment.getPaymentAmount(), payment.getPointAmount(), point.getPointAmount());
     }
 
     @Transactional

@@ -15,9 +15,9 @@ public class PointHistoryService {
     private final PointHistoryRepository pointHistoryRepository;
 
     @Transactional
-    public void createPointHistory(User user, int price, PaymentType paymentType) {
+    public PointHistory createPointHistory(User user, int price, PaymentType paymentType) {
         PointHistory pointHistory = new PointHistory(user, price, paymentType);
-        pointHistoryRepository.save(pointHistory);
+        return pointHistoryRepository.save(pointHistory);
     }
 
 }

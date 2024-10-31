@@ -1,6 +1,6 @@
-package com.auction.domain.payment.repository;
+package com.auction.domain.point.repository;
 
-import com.auction.domain.payment.entity.Payment;
+import com.auction.domain.point.entity.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
