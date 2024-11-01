@@ -21,18 +21,50 @@ public class RabbitMqConfig {
     }
 
     @Bean
-    public Queue auctionQueue() {
-        return QueueBuilder.durable("auction.queue")
+    public Queue auctionQueue1() {
+        return QueueBuilder.durable("auction.queue.1")
                 .deadLetterExchange("auction.dlx")
                 .build();
     }
 
     @Bean
-    public Binding auctionBinding(Queue auctionQueue, CustomExchange auctionExchange) {
+    public Binding auctionBinding1(Queue auctionQueue1, CustomExchange auctionExchange) {
         return BindingBuilder
-                .bind(auctionQueue)
+                .bind(auctionQueue1)
                 .to(auctionExchange)
-                .with("auction")
+                .with("auction.routing.1")
+                .noargs();
+    }
+
+    @Bean
+    public Queue auctionQueue2() {
+        return QueueBuilder.durable("auction.queue.2")
+                .deadLetterExchange("auction.dlx")
+                .build();
+    }
+
+    @Bean
+    public Binding auctionBinding2(Queue auctionQueue2, CustomExchange auctionExchange) {
+        return BindingBuilder
+                .bind(auctionQueue2)
+                .to(auctionExchange)
+                .with("auction.routing.2")
+                .noargs();
+    }
+
+    @Bean
+    public Queue auctionQueue3() {
+        return QueueBuilder.durable("auction.queue.3")
+                .deadLetterExchange("auction.dlx")
+                .build();
+    }
+
+    @Bean
+    public Binding auctionBinding3(Queue auctionQueue3, CustomExchange auctionExchange) {
+        return BindingBuilder
+                .bind(auctionQueue3)
+                .to(auctionExchange)
+                .with("auction.routing.3")
                 .noargs();
     }
 

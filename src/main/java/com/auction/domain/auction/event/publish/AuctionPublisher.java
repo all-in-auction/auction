@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.MessageDeliveryMode;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
@@ -18,9 +19,10 @@ public class AuctionPublisher {
 
     public void auctionPublisher(Object object, long targetTime1, long targetTime2) {
         try {
-            rabbitTemplate.convertAndSend("exchange.auction", "auction",
+            rabbitTemplate.convertAndSend("exchange.auction", selectRoutingKey(object),
                     objectMapper.writeValueAsString(object), msg -> {
                         msg.getMessageProperties().setHeader("x-delay", subtractTime(targetTime1, targetTime2));
+                        msg.getMessageProperties().setDeliveryMode(MessageDeliveryMode.PERSISTENT);
                         return msg;
                     });
         } catch (JsonProcessingException e) {
@@ -34,6 +36,11 @@ public class AuctionPublisher {
         } catch (JsonProcessingException e) {
             throw new ApiException(ErrorStatus._INVALID_REQUEST);
         }
+    }
+
+    private String selectRoutingKey(Object auctionEvent) {
+        int queueNumber = auctionEvent.hashCode() % 3 + 1;
+        return "auction.routing." + queueNumber;
     }
 
     private long subtractTime(long millis1, long millis2) {

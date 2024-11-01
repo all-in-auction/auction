@@ -26,7 +26,7 @@ public class AuctionConsumer {
     private final PointHistoryService pointHistoryService;
     private final DepositService depositService;
 
-    @RabbitListener(queues = "auction.queue")
+    @RabbitListener(queues = {"auction.queue.1", "auction.queue.2", "auction.queue.3"})
     public void auctionConsumer(String message) {
         try {
             log.info("AuctionEvent = {}", message);
