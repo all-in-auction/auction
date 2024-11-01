@@ -15,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
+import static com.auction.common.constants.RabbitMQConst.AUCTION_QUEUE_PREFIX;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -26,7 +28,7 @@ public class AuctionConsumer {
     private final PointHistoryService pointHistoryService;
     private final DepositService depositService;
 
-    @RabbitListener(queues = "auction.queue")
+    @RabbitListener(queues = {AUCTION_QUEUE_PREFIX + 1, AUCTION_QUEUE_PREFIX + 2, AUCTION_QUEUE_PREFIX + 3})
     public void auctionConsumer(String message) {
         try {
             log.info("AuctionEvent = {}", message);

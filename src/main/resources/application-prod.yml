@@ -13,7 +13,6 @@ spring:
 
   rabbitmq:
     host: ${RABBITMQ_HOST}
-    port: 5672
     username: guest
     password: guest
     listener:
@@ -24,6 +23,10 @@ spring:
           max-interval: 10s
           max-attempts: 3
           multiplier: 2
+    addresses:
+      - ${RABBITMQ_HOST}:5672  # 첫 번째 노드
+      - ${RABBITMQ_HOST}:5673  # 두 번째 노드
+      - ${RABBITMQ_HOST}:5674  # 세 번째 노드
 
   data:
     redis:

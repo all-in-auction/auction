@@ -29,7 +29,6 @@ import com.auction.domain.point.service.PointService;
 import com.auction.domain.pointHistory.enums.PaymentType;
 import com.auction.domain.pointHistory.service.PointHistoryService;
 import com.auction.domain.user.entity.User;
-import com.auction.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -55,7 +54,6 @@ public class AuctionService {
     private final PointService pointService;
     private final PointHistoryService pointHistoryService;
     private final DepositService depositService;
-    private final UserService userService;
 
     private final AuctionPublisher auctionPublisher;
     private final NotificationService notificationService;
@@ -249,17 +247,15 @@ public class AuctionService {
             pointHistoryService.createPointHistory(auction.getSeller(), auction.getMaxPrice(), PaymentType.RECEIVE);
 
             // 구매자 경매 이력 수정
-            String buyerId = (String) result.iterator().next();
-            User buyer = userService.getUser(Long.parseLong(buyerId));
-
-            auction.changeBuyer(buyer);
+            long buyerId = Long.parseLong(String.valueOf(result.iterator().next()));
+            auction.changeBuyer(User.fromUserId(buyerId));
 
             // 보증금 제거
-            depositService.deleteDeposit(buyer.getId(), auctionId);
-            log.debug("topBidUser : {}", buyer.getId());
+            depositService.deleteDeposit(buyerId, auctionId);
+            log.debug("topBidUser : {}", buyerId);
 
             // 경매 낙찰 알림
-            notificationService.sendNotification(buyer,
+            notificationService.sendNotification(User.fromUserId(buyerId),
                     NotificationType.AUCTION,
                     "입찰한 " + auction.getItem().getName() + "이(가) 낙찰되었습니다!",
                     relatedAuctionUrl + auctionId);
