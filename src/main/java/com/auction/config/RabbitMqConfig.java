@@ -11,19 +11,21 @@ import org.springframework.context.annotation.Configuration;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.auction.common.constants.RabbitMQConst.*;
+
 @Configuration
 public class RabbitMqConfig {
     @Bean
     public CustomExchange auctionExchange() {
         Map<String, Object> arguments = new HashMap<>();
         arguments.put("x-delayed-type", "direct");
-        return new CustomExchange("exchange.auction", "x-delayed-message", true, false, arguments);
+        return new CustomExchange(AUCTION_EXCHANGE, "x-delayed-message", true, false, arguments);
     }
 
     @Bean
     public Queue auctionQueue1() {
-        return QueueBuilder.durable("auction.queue.1")
-                .deadLetterExchange("auction.dlx")
+        return QueueBuilder.durable(queueNames[0])
+                .deadLetterExchange(AUCTION_DLX)
                 .build();
     }
 
@@ -32,14 +34,14 @@ public class RabbitMqConfig {
         return BindingBuilder
                 .bind(auctionQueue1)
                 .to(auctionExchange)
-                .with("auction.routing.1")
+                .with(routingKeys[0])
                 .noargs();
     }
 
     @Bean
     public Queue auctionQueue2() {
-        return QueueBuilder.durable("auction.queue.2")
-                .deadLetterExchange("auction.dlx")
+        return QueueBuilder.durable(queueNames[0])
+                .deadLetterExchange(AUCTION_DLX)
                 .build();
     }
 
@@ -48,14 +50,14 @@ public class RabbitMqConfig {
         return BindingBuilder
                 .bind(auctionQueue2)
                 .to(auctionExchange)
-                .with("auction.routing.2")
+                .with(routingKeys[1])
                 .noargs();
     }
 
     @Bean
     public Queue auctionQueue3() {
-        return QueueBuilder.durable("auction.queue.3")
-                .deadLetterExchange("auction.dlx")
+        return QueueBuilder.durable(queueNames[2])
+                .deadLetterExchange(AUCTION_DLX)
                 .build();
     }
 
@@ -64,7 +66,7 @@ public class RabbitMqConfig {
         return BindingBuilder
                 .bind(auctionQueue3)
                 .to(auctionExchange)
-                .with("auction.routing.3")
+                .with(routingKeys[2])
                 .noargs();
     }
 
@@ -102,12 +104,12 @@ public class RabbitMqConfig {
 
     @Bean
     public Queue deadLetterQueue() {
-        return QueueBuilder.durable("auction.dlq").build();
+        return QueueBuilder.durable(AUCTION_DLQ).build();
     }
 
     @Bean
     public FanoutExchange deadLetterExchange() {
-        return ExchangeBuilder.fanoutExchange("auction.dlx").build();
+        return ExchangeBuilder.fanoutExchange(AUCTION_DLX).build();
     }
 
     @Bean
