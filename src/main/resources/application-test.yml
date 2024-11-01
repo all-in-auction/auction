@@ -22,6 +22,9 @@ spring:
           max-attempts: 3
           multiplier: 2
 
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS}
+
   data:
     redis:
       host: localhost

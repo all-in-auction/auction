@@ -47,12 +47,11 @@ public class AuctionQueryRepositoryImpl implements AuctionQueryRepository {
     }
 
     @Override
-    public Page<AuctionResponseDto> findByCustomSearch(Pageable pageable, String name, String category, String sortBy) {
+    public Page<AuctionResponseDto> findByKeyword(Pageable pageable, String keyword) {
         List<Auction> auctionList = queryFactory
                 .selectFrom(auction)
                 .leftJoin(auction.item, item).fetchJoin()
-                .where(nameEq(name), categoryEq(category))
-                .orderBy(getSortOrder(sortBy))
+                .where(nameEq(keyword), descriptionHas(keyword))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -69,8 +68,12 @@ public class AuctionQueryRepositoryImpl implements AuctionQueryRepository {
         return new PageImpl<>(auctionResponseDtos, pageable, total);
     }
 
-    private BooleanExpression nameEq(String name) {
-        return name != null ? auction.item.name.contains(name) : null;
+    private BooleanExpression nameEq(String keyword) {
+        return keyword != null ? auction.item.name.contains(keyword) : null;
+    }
+
+    private BooleanExpression descriptionHas(String keyword) {
+        return keyword != null ? auction.item.description.contains(keyword) : null;
     }
 
     private BooleanExpression categoryEq(String category) {
