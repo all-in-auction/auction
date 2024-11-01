@@ -34,8 +34,8 @@ public class AuctionSearchService {
     private final ElasticsearchTemplate elasticsearchTemplate;
 
     // ES 적용 X
-    public Page<AuctionResponseDto> searchAuctionItemsByKeyword(Pageable pageable, String keyword, String category, String sortBy) {
-        return auctionRepository.findByKeyword(pageable, keyword, category, sortBy);
+    public Page<AuctionResponseDto> searchAuctionItemsByKeyword(Pageable pageable, String keyword) {
+        return auctionRepository.findByKeyword(pageable, keyword);
     }
 
     public Page<ItemDocumentResponseDto> elasticSearchAuctionItemsByName(Pageable pageable, String keyword) {

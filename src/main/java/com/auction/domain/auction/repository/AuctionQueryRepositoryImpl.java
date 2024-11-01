@@ -47,12 +47,11 @@ public class AuctionQueryRepositoryImpl implements AuctionQueryRepository {
     }
 
     @Override
-    public Page<AuctionResponseDto> findByKeyword(Pageable pageable, String keyword, String category, String sortBy) {
+    public Page<AuctionResponseDto> findByKeyword(Pageable pageable, String keyword) {
         List<Auction> auctionList = queryFactory
                 .selectFrom(auction)
                 .leftJoin(auction.item, item).fetchJoin()
-                .where(nameEq(keyword), descriptionHas(keyword), categoryEq(category))
-                .orderBy(getSortOrder(sortBy))
+                .where(nameEq(keyword), descriptionHas(keyword))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
