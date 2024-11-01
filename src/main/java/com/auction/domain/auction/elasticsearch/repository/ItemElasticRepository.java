@@ -32,5 +32,7 @@ public interface ItemElasticRepository extends ElasticsearchRepository<ItemDocum
 //    )
 //    List<ItemDocument> findByKeyword(String name);
 
+    @Query("{\"bool\": { \"must\": [ \n" +
+            "    {\"wildcard\": {\"name\": \"*?0*\"}}]}}")
     List<ItemDocument> findByName(String name);
 }
