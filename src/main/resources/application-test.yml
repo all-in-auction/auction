@@ -29,6 +29,7 @@ spring:
     redis:
       host: localhost
       port: 6379
+      password : auth
 
   jpa:
     hibernate:
@@ -40,3 +41,14 @@ spring:
         show_sql: true
         format_sql: true
     database-platform: org.hibernate.dialect.H2Dialect
+
+payment:
+  client:
+    key: ${PAYMENT_CLIENT_KEY}
+  secret:
+    key: ${PAYMENT_SECRET_KEY}
+
+notification:
+  related-url:
+    auction: localhost:8080/api/v1/auctions/
+    review: localhost:8080/api/v2/reviews/

@@ -2,6 +2,7 @@ package com.auction.domain.auction.repository;
 
 import com.auction.domain.auction.entity.Auction;
 import com.auction.domain.user.entity.User;
+import jdk.jfr.Unsigned;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

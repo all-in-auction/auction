@@ -58,6 +58,7 @@ dependencies {
 
     // redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+<<<<<<< HEAD
 
     // elasticsearch
     implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
@@ -65,6 +66,18 @@ dependencies {
 
     // data faker
     implementation 'net.datafaker:datafaker:2.4.0'
+=======
+    implementation 'org.redisson:redisson-spring-boot-starter:3.37.0'
+
+    // actuator
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // prometheus
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+
+    // logstash
+    implementation 'net.logstash.logback:logstash-logback-encoder:8.0'
+>>>>>>> d1fc23e7e32eeef15f8e03afbf21dde8f905e187
 }
 
 tasks.named('test') {

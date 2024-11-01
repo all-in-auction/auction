@@ -14,6 +14,8 @@ import java.util.Optional;
 public interface CouponUserRepository extends JpaRepository<CouponUser, Long> {
     Optional<CouponUser> findByUserAndCoupon(User user, Coupon coupon);
 
+    List<CouponUser> findByCoupon(Coupon coupon);
+
     @Modifying
     @Query("DELETE FROM CouponUser cu WHERE cu.usedAt IS NULL AND cu.coupon.id IN :couponIds")
     void deleteByCouponIds(@Param("couponIds") List<Long> couponIds);

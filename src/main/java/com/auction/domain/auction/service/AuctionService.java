@@ -1,5 +1,6 @@
 package com.auction.domain.auction.service;
 
+import com.auction.common.annotation.DistributedLock;
 import com.auction.common.apipayload.status.ErrorStatus;
 import com.auction.common.entity.AuthUser;
 import com.auction.common.exception.ApiException;
@@ -46,7 +47,6 @@ import java.util.*;
 
 @Slf4j
 @Service
-@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class AuctionService {
     private final ItemRepository itemRepository;
@@ -106,11 +106,13 @@ public class AuctionService {
         return AuctionCreateResponseDto.from(savedAuction);
     }
 
+    @Transactional(readOnly = true)
     public AuctionResponseDto getAuction(Long auctionId) {
         Auction auctionItem = getAuctionById(auctionId);
         return AuctionResponseDto.from(auctionItem);
     }
 
+    @Transactional(readOnly = true)
     public Page<AuctionResponseDto> getAuctionList(Pageable pageable) {
         return auctionRepository.findAllCustom(pageable);
     }
@@ -144,7 +146,7 @@ public class AuctionService {
         return "물품이 삭제되었습니다.";
     }
 
-    @Transactional
+    @DistributedLock(key = "T(java.lang.String).format('Auction%d', #auctionId)")
     public BidCreateResponseDto createBid(AuthUser authUser, long auctionId, BidCreateRequestDto bidCreateRequestDto) {
         User user = User.fromAuthUser(authUser);
         Auction auction = getAuction(auctionId);
@@ -190,6 +192,22 @@ public class AuctionService {
                 }
         );
         depositService.placeDeposit(user.getId(), auctionId, bidPrice);
+
+        // reids zset 에서 이전 최고 입찰 구매자 보증금 환불
+        Set<ZSetOperations.TypedTuple<Object>> typedTuples =
+                redisTemplate.opsForZSet().reverseRangeWithScores(auctionHistoryKey, 0, 0);
+        Optional.ofNullable(typedTuples)
+                .filter(tuples -> !tuples.isEmpty())
+                .ifPresent(tuples -> {
+                    for (ZSetOperations.TypedTuple<Object> tuple : tuples) {
+                        long userId = Long.parseLong(String.valueOf(tuple.getValue()));
+                        int price = Objects.requireNonNull(tuple.getScore()).intValue();
+                        if(userId != user.getId()) {
+                            AuctionHistoryDto auctionHistoryDto = AuctionHistoryDto.of(userId, price);
+                            auctionPublisher.refundPublisher(RefundEvent.from(auctionId, auctionHistoryDto));
+                        }
+                    }
+                });
 
         // redis zset 에 입찰 기록 저장
         redisTemplate.opsForZSet().add(auctionHistoryKey, user.getId().toString(), bidPrice);
@@ -245,38 +263,13 @@ public class AuctionService {
                     NotificationType.AUCTION,
                     "입찰한 " + auction.getItem().getName() + "이(가) 낙찰되었습니다!",
                     relatedAuctionUrl + auctionId);
-
-            // 패찰한 사용자 환불 처리 (메시지큐에 던짐)
-            Set<ZSetOperations.TypedTuple<Object>> typedTuples
-                    = redisTemplate.opsForZSet().reverseRangeWithScores(auctionHistoryKey, 1, -1);
-
-            List<AuctionHistoryDto> list = new ArrayList<>();
-            Optional.ofNullable(typedTuples)
-                    .filter(tuples -> !tuples.isEmpty())
-                    .ifPresent(tuples -> {
-                        for (ZSetOperations.TypedTuple<Object> tuple : tuples) {
-                            String userId = (String) tuple.getValue();
-                            int price = tuple.getScore().intValue();
-                            list.add(new AuctionHistoryDto(Long.parseLong(userId), price));
-
-                            // 패찰 알림
-                            notificationService.sendNotification(userService.getUser(Long.parseLong(userId)),
-                                    NotificationType.AUCTION,
-                                    "입찰한 " + auction.getItem().getName() + "이(가) 패찰되었습니다.",
-                                    relatedAuctionUrl + auctionId);
-                        }
-                    });
-            log.debug("refund list : {}", list.toString());
-
-            for (AuctionHistoryDto auctionHistoryDto : list) {
-                auctionPublisher.refundPublisher(RefundEvent.from(auctionId, auctionHistoryDto));
-            }
         }
         // redis key 삭제
         redisTemplate.delete(auctionHistoryKey);
         redisTemplate.opsForZSet().remove(AUCTION_RANKING_PREFIX, String.valueOf(auctionId));
     }
 
+    @Transactional(readOnly = true)
     public List<AuctionRankingResponseDto> getRankingList() {
         Set<ZSetOperations.TypedTuple<Object>> rankings =
                 redisTemplate.opsForZSet().reverseRangeWithScores(AUCTION_RANKING_PREFIX, 0, 9);

@@ -43,8 +43,13 @@ public enum ErrorStatus implements BaseCode {
     _ALREADY_USED_COUPON(HttpStatus.BAD_REQUEST, "400", "이미 사용된 쿠폰입니다."),
     _EXPIRED_COUPON(HttpStatus.BAD_REQUEST, "400", "유효기간이 지난 쿠폰입니다."),
     _SOLD_OUT_COUPON(HttpStatus.CONFLICT, "409", "준비된 쿠폰 수량이 모두 소진되었습니다."),
+    _ALREADY_CLAIMED_COUPON(HttpStatus.BAD_REQUEST, "400", "이미 수령한 쿠폰입니다."),
+    _INTERNAL_SERVER_ERROR_COUPON(HttpStatus.INTERNAL_SERVER_ERROR, "500", "쿠폰 발급에 실패하였습니다."),
 
-    ;
+
+    // review
+    _NOT_FOUND_REVIEW(HttpStatus.NOT_FOUND, "404", "해당 리뷰를 찾을 수 없습니다."),
+    _INVALID_REQUEST_REVIEW(HttpStatus.NOT_FOUND, "400", "종료된 경매만 리뷰를 작성할 수 있습니다.");
 
     private HttpStatus httpStatus;
     private String statusCode;

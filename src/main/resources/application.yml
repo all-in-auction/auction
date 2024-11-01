@@ -20,4 +20,8 @@ jwt:
   secret:
     key: ${JWT_SECRET_KEY}
 
-
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "prometheus"
