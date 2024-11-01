@@ -8,21 +8,29 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
 import java.util.List;
 
 public interface ItemElasticRepository extends ElasticsearchRepository<ItemDocument, Long> {
-//    @Query("{"
-//            + "  \"bool\": {"
-//            + "    \"must\": ["
-//            + "      { \"multi_match\": {"
-//            + "          \"query\": \"?0\","
-//            + "          \"fields\": [\"name\", \"description\"],"
-//            + "          \"type\": \"best_fields\""
-//            + "      }}"
-//            + "    ],"
-//            + "    \"filter\": ["
-//            + "      { \"term\": { \"category\": \"?1\" } }"
-//            + "    ]"
-//            + "  }"
-//            + "}")
-//    List<ItemDocument> findByKeywordAndCategorySortBy(Pageable pageable, String keyword, String category, String sortBy);
+
+//    @Query("""
+//            {
+//                "bool": {
+//                  "must": [
+//                    {
+//                      "match": {
+//                        "message": {
+//                          "query": "#{@queryParameter.value}"
+//                        }
+//                      }
+//                    }
+//                  ],
+//                  "should": [
+//                    {
+//                      "match_phrase": {
+//                        "message": "#{@queryParameter.value}"
+//                      }
+//                    }
+//                  ]
+//            }"""
+//    )
+//    List<ItemDocument> findByKeyword(String name);
 
     List<ItemDocument> findByName(String name);
 }

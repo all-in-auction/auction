@@ -27,18 +27,22 @@ public class AuctionItemSearchController {
      * @return Page<AuctionResponseDto>
      */
     @GetMapping("/search")
-    public ApiResponse<Page<AuctionResponseDto>> searchAuctionItems2(@PageableDefault(size = 5) Pageable pageable,
+    public ApiResponse<Page<AuctionResponseDto>> searchAuctionItems(@PageableDefault(size = 5) Pageable pageable,
                                                                     @RequestParam(required = false) String keyword) {
+        if(keyword == null || keyword.isEmpty()) {
+            return ApiResponse.ok(searchService.searchAllAuctionItems(pageable));
+        }
         return ApiResponse.ok(searchService.searchAuctionItemsByKeyword(pageable, keyword));
     }
 
     @GetMapping("/elasticsearch")
     public ApiResponse<Page<ItemDocumentResponseDto>> elasticSearchAuctionItems(@PageableDefault(size = 5) Pageable pageable,
-                                                                                @RequestParam(required = false) String keyword,
-                                                                                @RequestParam(required = false) String category,
-                                                                                @RequestParam(required = false) String sortBy) {
-//        return ApiResponse.ok(searchService.elasticSearchAuctionItemsByName(pageable, keyword));
-        return ApiResponse.ok(searchService.elasticSearchAuctionItemsByKeyword(pageable, keyword, category, sortBy));
+                                                                                @RequestParam(required = false) String keyword) {
+        if(keyword == null || keyword.isEmpty()) {
+            return ApiResponse.ok(searchService.elasticSearchAllAuctionItems(pageable));
+        }
+        return ApiResponse.ok(searchService.elasticSearchAuctionItemsByName(pageable, keyword));
+//        return ApiResponse.ok(searchService.elasticSearchAuctionItemsByKeyword(pageable, keyword, category, sortBy));
     }
 
 }
