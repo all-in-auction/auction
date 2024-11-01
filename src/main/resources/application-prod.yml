@@ -29,13 +29,11 @@ spring:
     redis:
       host: ${REDIS_HOST}
       port: 6379
-<<<<<<< HEAD
+      password: ${REDIS_PASSWORD}
     elasticsearch:
       repositories:
         enabled: true
-=======
-      password: ${REDIS_PASSWORD}
->>>>>>> d1fc23e7e32eeef15f8e03afbf21dde8f905e187
+
 
   jpa:
     hibernate:
