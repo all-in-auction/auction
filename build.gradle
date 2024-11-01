@@ -60,6 +60,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.redisson:redisson-spring-boot-starter:3.37.0'
 
+    // elasticsearch
+    implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+    implementation 'co.elastic.clients:elasticsearch-java:8.11.1'
+//    implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.7.1'
     // actuator
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
