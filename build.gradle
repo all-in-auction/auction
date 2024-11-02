@@ -72,6 +72,10 @@ dependencies {
 
     // logstash
     implementation 'net.logstash.logback:logstash-logback-encoder:8.0'
+
+    implementation 'net.datafaker:datafaker:2.4.0'
+
+
 }
 
 tasks.named('test') {
