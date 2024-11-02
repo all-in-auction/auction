@@ -4,6 +4,7 @@ import com.auction.common.annotation.DistributedLock;
 import com.auction.common.apipayload.status.ErrorStatus;
 import com.auction.common.entity.AuthUser;
 import com.auction.common.exception.ApiException;
+import com.auction.domain.coupon.dto.CouponClaimMessage;
 import com.auction.domain.coupon.dto.request.CouponCreateRequestDto;
 import com.auction.domain.coupon.dto.response.CouponClaimResponseDto;
 import com.auction.domain.coupon.dto.response.CouponCreateResponseDto;
@@ -13,8 +14,10 @@ import com.auction.domain.coupon.repository.CouponUserRepository;
 import com.auction.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,10 +34,14 @@ public class CouponService {
     private final CouponUserService couponUserService;
 
     private final RedisTemplate<String, Object> redisTemplate;
-    private final DefaultRedisScript<Long> redisScript;
+    private final DefaultRedisScript<Object> redisScript;
 
     public static String COUPON_PREFIX = "COUPON:";
     public static String USER_PREFIX = "USER:";
+
+    @Value("${kafka.topic.coupon}")
+    private String couponTopic;
+    private final KafkaTemplate<String, CouponClaimMessage> kafkaTemplate;
 
     @Transactional
     public CouponCreateResponseDto createCoupon(CouponCreateRequestDto requestDto) {
@@ -77,19 +84,24 @@ public class CouponService {
         List<String> keys = Arrays.asList(couponKey, userKey);
 
         // Lua 스크립트 실행
-        Long result = redisTemplate.execute(redisScript, keys);
+        Integer result;
+        try {
+            result = (Integer) redisTemplate.execute(redisScript, keys);
+        } catch (Exception e) {
+            throw new ApiException(ErrorStatus._INTERNAL_SERVER_ERROR_COUPON);
+        }
 
         if (result == null) throw new ApiException(ErrorStatus._INTERNAL_SERVER_ERROR_COUPON);
-        if (result == 1) throw new ApiException(ErrorStatus._ALREADY_CLAIMED_COUPON);
-        if (result == 2) throw new ApiException(ErrorStatus._SOLD_OUT_COUPON);
+        if (result == -100) throw new ApiException(ErrorStatus._ALREADY_CLAIMED_COUPON);
+        if (result == -200) throw new ApiException(ErrorStatus._SOLD_OUT_COUPON);
 
-        // TODO 카프카 사용하여 쿠폰 발급 처리하도록 수정
         Coupon coupon = couponRepository.findById(couponId)
                 .orElseThrow(() -> new ApiException(ErrorStatus._NOT_FOUND_COUPON));
 
-        User user = User.fromAuthUser(authUser);
-        coupon.decrementAmount();
-        couponUserService.createCouponUser(user, coupon);
+        // kafka 메세지 발행
+        CouponClaimMessage message = new CouponClaimMessage(authUser.getId(), couponId, result);
+        kafkaTemplate.send(couponTopic, message);
+
         return CouponClaimResponseDto.from(coupon);
     }
 }

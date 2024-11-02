@@ -56,4 +56,8 @@ public class Coupon {
 
         amount--;
     }
+
+    public void updateAmount(int k) {
+        this.amount = k;
+    }
 }

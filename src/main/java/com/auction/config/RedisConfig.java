@@ -61,10 +61,10 @@ public class RedisConfig {
     }
 
     @Bean
-    public DefaultRedisScript<Long> couponRedisScript() {
-        DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
+    public DefaultRedisScript<Object> couponRedisScript() {
+        DefaultRedisScript<Object> redisScript = new DefaultRedisScript<>();
         redisScript.setLocation(new ClassPathResource("scripts/coupon.lua"));
-        redisScript.setResultType(Long.class);  // 반환 타입 설정
+        redisScript.setResultType(Object.class);  // 반환 타입 설정
         return redisScript;
     }
 }
