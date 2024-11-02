@@ -99,7 +99,7 @@ public class CouponService {
                 .orElseThrow(() -> new ApiException(ErrorStatus._NOT_FOUND_COUPON));
 
         // kafka 메세지 발행
-        CouponClaimMessage message = new CouponClaimMessage(authUser.getId(), couponId, result);
+        CouponClaimMessage message = new CouponClaimMessage(authUser.getId(), couponId);
         kafkaTemplate.send(couponTopic, message);
 
         return CouponClaimResponseDto.from(coupon);
