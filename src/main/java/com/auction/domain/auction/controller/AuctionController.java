@@ -87,21 +87,6 @@ public class AuctionController {
     }
 
     /**
-     * 조건 검색
-     * @param pageable 페이지 조건으로 검색 : ?page=&size=
-     * @param name 경매 물품 이름으로 검색 (부분 검색 허용) : ?name=
-     * @param category 경매 물품 카테고리로 검색 : ?category=
-     * @return Page<AuctionResponseDto>
-     */
-    @GetMapping("/v1/auctions/search")
-    public ApiResponse<Page<AuctionResponseDto>> searchAuctionItems(@PageableDefault(size = 5) Pageable pageable,
-                                                                    @RequestParam(required = false) String name,
-                                                                    @RequestParam(required = false) String category,
-                                                                    @RequestParam(required = false) String sortBy) {
-        return ApiResponse.ok(auctionService.searchAuctionItems(pageable, name, category, sortBy));
-    }
-
-    /**
      * 입찰 등록
      * @param authUser
      * @param auctionId             경매 식별자
