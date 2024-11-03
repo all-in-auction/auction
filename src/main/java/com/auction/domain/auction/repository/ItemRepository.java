@@ -16,6 +16,6 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     List<Item> findByIdList(List<Long> itemIdList);
 
     @Query("SELECT new com.auction.domain.auction.dto.response.ItemSearchResponseDto(i.id, i.name, i.description) " +
-            "FROM Item i WHERE i.name LIKE :keyword%")
+            "FROM Item i WHERE i.name LIKE %:keyword% OR i.description LIKE %:keyword%")
     Page<ItemSearchResponseDto> findByKeyword(Pageable pageable, @Param("keyword") String keyword);
 }
