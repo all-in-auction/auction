@@ -1,6 +1,7 @@
 package com.auction.domain.auction.elasticsearch.repository;
 
 import com.auction.domain.auction.entity.ItemDocument;
+
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 
 import java.io.IOException;
@@ -10,4 +11,5 @@ public interface ItemElasticRepository extends ElasticsearchRepository<ItemDocum
 
     List<ItemDocument> findByName(String name) throws IOException;
     List<ItemDocument> findByCategoryAndName(String category, String name) throws IOException;
+
 }

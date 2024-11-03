@@ -1,16 +1,17 @@
 package com.auction.domain.auction.service;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
-import com.auction.domain.auction.dto.response.AuctionResponseDto;
 import com.auction.domain.auction.dto.response.ItemDocumentResponseDto;
+import com.auction.domain.auction.dto.response.ItemSearchResponseDto;
+import com.auction.domain.auction.elasticsearch.repository.ItemElasticRepository;
+import com.auction.domain.auction.entity.Item;
 import com.auction.domain.auction.entity.ItemDocument;
-import com.auction.domain.auction.repository.AuctionRepository;
+import com.auction.domain.auction.repository.ItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -25,15 +26,21 @@ import java.util.stream.Collectors;
 @Service
 public class AuctionSearchService {
 
-    private final AuctionRepository auctionRepository;
+    private final ItemRepository itemRepository;
+    private final ItemElasticRepository elasticRepository;
     private final ElasticsearchClient elasticsearchClient;
 
-    // 기본 키워드 검색 (Elasticsearch 적용 안했을 때)
-//    public Page<AuctionResponseDto> searchAuctionItemsByKeyword(Pageable pageable, String keyword) {
-//        return auctionRepository.findByKeyword(pageable, keyword);
-//    }
+    // ES 적용 X
+    public Page<ItemSearchResponseDto> searchAuctionItemsByKeyword(Pageable pageable, String keyword) {
+        return itemRepository.findByKeyword(pageable, keyword);
+    }
+    public Page<ItemSearchResponseDto> searchAllAuctionItems(Pageable pageable) {
+        List<Item> all = itemRepository.findAll();
+        List<ItemSearchResponseDto> dtos = all.stream().map(ItemSearchResponseDto::from).toList();
+        return new PageImpl<>(dtos, pageable, all.size());
+    }
 
-    // name 필드로 검색 (Elasticsearch 적용)
+    // ES 적용 O
     public Page<ItemDocumentResponseDto> elasticSearchAuctionItemsByName(Pageable pageable, String keyword) throws IOException {
         Query query = MatchQuery.of(m -> m
                 .field("name")
@@ -56,7 +63,12 @@ public class AuctionSearchService {
         return new PageImpl<>(dtos, pageable, response.hits().total().value());
     }
 
-    // Elasticsearch에서 키워드와 필터를 사용하여 검색
+    public Page<ItemDocumentResponseDto> elasticSearchAllAuctionItems(Pageable pageable) {
+        List<ItemDocument> documents = (List<ItemDocument>) elasticRepository.findAll();
+        List<ItemDocumentResponseDto> dtos = documents.stream().map(ItemDocumentResponseDto::from).toList();
+        return new PageImpl<>(dtos, pageable, documents.size());
+    }
+
     public Page<ItemDocumentResponseDto> elasticSearchAuctionItemsByKeyword(Pageable pageable, String keyword) throws IOException {
         // BoolQueryBuilder를 사용하여 검색 조건을 생성
         BoolQuery.Builder boolQueryBuilder = new BoolQuery.Builder();
@@ -65,10 +77,6 @@ public class AuctionSearchService {
             boolQueryBuilder.should(MatchQuery.of(m -> m.field("name").query(keyword).boost(2.0F))._toQuery())
                     .should(MatchQuery.of(m -> m.field("description").query(keyword))._toQuery());
         }
-//
-//        if (category != null && !category.isEmpty()) {
-//            boolQueryBuilder.filter(Query.of(q -> q.term(t -> t.field("category").value(category))));
-//        }
 
         Query query = Query.of(q -> q.bool(boolQueryBuilder.build()));
 
