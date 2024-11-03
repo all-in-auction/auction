@@ -3,6 +3,7 @@ package com.auction.domain.auction.controller;
 import com.auction.common.apipayload.ApiResponse;
 import com.auction.domain.auction.dto.response.AuctionResponseDto;
 import com.auction.domain.auction.dto.response.ItemDocumentResponseDto;
+import com.auction.domain.auction.dto.response.ItemSearchResponseDto;
 import com.auction.domain.auction.service.AuctionSearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,8 +28,8 @@ public class AuctionItemSearchController {
      * @return Page<AuctionResponseDto>
      */
     @GetMapping("/search")
-    public ApiResponse<Page<AuctionResponseDto>> searchAuctionItems(@PageableDefault(size = 5) Pageable pageable,
-                                                                    @RequestParam(required = false) String keyword) {
+    public ApiResponse<Page<ItemSearchResponseDto>> searchAuctionItems(@PageableDefault(size = 5) Pageable pageable,
+                                                                       @RequestParam(required = false) String keyword) {
         if(keyword == null || keyword.isEmpty()) {
             return ApiResponse.ok(searchService.searchAllAuctionItems(pageable));
         }
@@ -42,7 +43,6 @@ public class AuctionItemSearchController {
             return ApiResponse.ok(searchService.elasticSearchAllAuctionItems(pageable));
         }
         return ApiResponse.ok(searchService.elasticSearchAuctionItemsByName(pageable, keyword));
-//        return ApiResponse.ok(searchService.elasticSearchAuctionItemsByKeyword(pageable, keyword, category, sortBy));
     }
 
 }

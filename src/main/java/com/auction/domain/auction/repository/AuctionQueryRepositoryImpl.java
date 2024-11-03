@@ -1,7 +1,10 @@
 package com.auction.domain.auction.repository;
 
 import com.auction.domain.auction.dto.response.AuctionResponseDto;
+import com.auction.domain.auction.dto.response.ItemSearchResponseDto;
 import com.auction.domain.auction.entity.Auction;
+import com.auction.domain.auction.entity.Item;
+import com.auction.domain.auction.entity.QItem;
 import com.auction.domain.auction.enums.ItemCategory;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -47,25 +50,24 @@ public class AuctionQueryRepositoryImpl implements AuctionQueryRepository {
     }
 
     @Override
-    public Page<AuctionResponseDto> findByKeyword(Pageable pageable, String keyword) {
-        List<Auction> auctionList = queryFactory
-                .selectFrom(auction)
-                .leftJoin(auction.item, item).fetchJoin()
+    public Page<ItemSearchResponseDto> findByKeyword(Pageable pageable, String keyword) {
+        List<Item> itemList = queryFactory
+                .selectFrom(item)
                 .where(nameEq(keyword), descriptionHas(keyword))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
         long total = Optional.ofNullable(queryFactory
-                .select(auction.count())
-                .from(auction)
+                .select(item.count())
+                .from(item)
                 .fetchOne()).orElse(0L);
 
-        List<AuctionResponseDto> auctionResponseDtos = auctionList.stream()
-                .map(AuctionResponseDto::from)
+        List<ItemSearchResponseDto> dtos = itemList.stream()
+                .map(ItemSearchResponseDto::from)
                 .toList();
 
-        return new PageImpl<>(auctionResponseDtos, pageable, total);
+        return new PageImpl<>(dtos, pageable, total);
     }
 
     private BooleanExpression nameEq(String keyword) {

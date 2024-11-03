@@ -1,43 +1,35 @@
 package com.auction.domain.auction.service;
 
-import com.auction.domain.auction.dto.response.AuctionResponseDto;
 import com.auction.domain.auction.dto.response.ItemDocumentResponseDto;
+import com.auction.domain.auction.dto.response.ItemSearchResponseDto;
 import com.auction.domain.auction.elasticsearch.repository.ItemElasticRepository;
-import com.auction.domain.auction.entity.Auction;
+import com.auction.domain.auction.entity.Item;
 import com.auction.domain.auction.entity.ItemDocument;
 import com.auction.domain.auction.repository.AuctionRepository;
+import com.auction.domain.auction.repository.ItemRepository;
 import lombok.RequiredArgsConstructor;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.springframework.data.domain.*;
-import org.springframework.data.elasticsearch.annotations.Query;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
-import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
-
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-import static org.springframework.data.elasticsearch.client.elc.Queries.termQuery;
 
 @RequiredArgsConstructor
 @Service
 public class AuctionSearchService {
 
-    private final AuctionRepository auctionRepository;
+    private final ItemRepository itemRepository;
     private final ItemElasticRepository elasticRepository;
-    private final ElasticsearchTemplate elasticsearchTemplate;
 
     // ES 적용 X
-    public Page<AuctionResponseDto> searchAuctionItemsByKeyword(Pageable pageable, String keyword) {
-        return auctionRepository.findByKeyword(pageable, keyword);
+    public Page<ItemSearchResponseDto> searchAuctionItemsByKeyword(Pageable pageable, String keyword) {
+        return itemRepository.findByKeyword(pageable, keyword);
     }
-    public Page<AuctionResponseDto> searchAllAuctionItems(Pageable pageable) {
-        List<Auction> all = auctionRepository.findAll();
-        List<AuctionResponseDto> dtos = all.stream().map(AuctionResponseDto::from).toList();
+    public Page<ItemSearchResponseDto> searchAllAuctionItems(Pageable pageable) {
+        List<Item> all = itemRepository.findAll();
+        List<ItemSearchResponseDto> dtos = all.stream().map(ItemSearchResponseDto::from).toList();
         return new PageImpl<>(dtos, pageable, all.size());
     }
 
@@ -52,10 +44,4 @@ public class AuctionSearchService {
         List<ItemDocumentResponseDto> dtos = documents.stream().map(ItemDocumentResponseDto::from).toList();
         return new PageImpl<>(dtos, pageable, documents.size());
     }
-
-//    public Page<ItemDocumentResponseDto> elasticSearchAuctionItemsByKeyword(Pageable pageable, String keyword) {
-//        List<ItemDocument> documents = elasticRepository.findByKeyword(keyword);
-//        List<ItemDocumentResponseDto> dtos = documents.stream().map(ItemDocumentResponseDto::from).toList();
-//        return new PageImpl<>(dtos, pageable, documents.size());
-//    }
 }
