@@ -47,7 +47,9 @@ public class CouponService {
     public CouponCreateResponseDto createCoupon(CouponCreateRequestDto requestDto) {
         Coupon saved = couponRepository.save(Coupon.from(requestDto));
         // redis 에 재고 저장
-        redisTemplate.opsForValue().set(COUPON_PREFIX + saved.getId(), saved.getAmount());
+        if (saved.getAmount() != null) {
+            redisTemplate.opsForValue().set(COUPON_PREFIX + saved.getId(), saved.getAmount());
+        }
         return CouponCreateResponseDto.from(saved);
     }
 
@@ -79,14 +81,17 @@ public class CouponService {
 
     @Transactional
     public CouponClaimResponseDto claimCouponV3(AuthUser authUser, Long couponId) {
+        Coupon coupon = couponRepository.findById(couponId)
+                .orElseThrow(() -> new ApiException(ErrorStatus._NOT_FOUND_COUPON));
+
         String couponKey = COUPON_PREFIX + couponId;
         String userKey = couponKey + ":" + USER_PREFIX + authUser.getId();
         List<String> keys = Arrays.asList(couponKey, userKey);
 
         // Lua 스크립트 실행
-        Integer result;
+        Long result;
         try {
-            result = (Integer) redisTemplate.execute(redisScript, keys);
+            result = (Long) redisTemplate.execute(redisScript, keys);
         } catch (Exception e) {
             throw new ApiException(ErrorStatus._INTERNAL_SERVER_ERROR_COUPON);
         }
@@ -94,9 +99,6 @@ public class CouponService {
         if (result == null) throw new ApiException(ErrorStatus._INTERNAL_SERVER_ERROR_COUPON);
         if (result == -100) throw new ApiException(ErrorStatus._ALREADY_CLAIMED_COUPON);
         if (result == -200) throw new ApiException(ErrorStatus._SOLD_OUT_COUPON);
-
-        Coupon coupon = couponRepository.findById(couponId)
-                .orElseThrow(() -> new ApiException(ErrorStatus._NOT_FOUND_COUPON));
 
         // kafka 메세지 발행
         CouponClaimMessage message = new CouponClaimMessage(authUser.getId(), couponId);
