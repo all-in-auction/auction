@@ -7,8 +7,10 @@ import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.listener.PatternTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
@@ -56,6 +58,14 @@ public class RedisConfig {
         Config config = new Config();
         config.useSingleServer().setAddress(REDISSON_HOST_PREFIX + redisHost + ":" + redisPort).setPassword(redisPassword);
         return Redisson.create(config);
+    }
+
+    @Bean
+    public DefaultRedisScript<Object> couponRedisScript() {
+        DefaultRedisScript<Object> redisScript = new DefaultRedisScript<>();
+        redisScript.setLocation(new ClassPathResource("scripts/coupon.lua"));
+        redisScript.setResultType(Object.class);  // 반환 타입 설정
+        return redisScript;
     }
 }
 

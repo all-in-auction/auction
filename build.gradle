@@ -81,6 +81,9 @@ dependencies {
     // logstash
     implementation 'net.logstash.logback:logstash-logback-encoder:8.0'
 
+    //kafka
+    implementation 'org.springframework.kafka:spring-kafka'
+
     implementation 'net.datafaker:datafaker:2.4.0'
 
 

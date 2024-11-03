@@ -28,4 +28,11 @@ public class CouponController {
                                                            @PathVariable Long couponId) {
         return ApiResponse.ok(couponService.claimCoupon(authUser, couponId));
     }
+
+    @PostMapping("/v3/coupons/{couponId}/claim")
+    public ApiResponse<CouponClaimResponseDto> claimCouponV3(@AuthenticationPrincipal AuthUser authUser,
+                                                           @PathVariable Long couponId) {
+        return ApiResponse.ok(couponService.claimCouponV3(authUser, couponId));
+    }
+
 }
