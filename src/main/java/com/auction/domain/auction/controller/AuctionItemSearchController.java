@@ -1,7 +1,6 @@
 package com.auction.domain.auction.controller;
 
 import com.auction.common.apipayload.ApiResponse;
-import com.auction.domain.auction.dto.response.AuctionResponseDto;
 import com.auction.domain.auction.dto.response.ItemDocumentResponseDto;
 import com.auction.domain.auction.dto.response.ItemSearchResponseDto;
 import com.auction.domain.auction.service.AuctionSearchService;
@@ -13,6 +12,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/v2/auctions")
@@ -38,7 +39,7 @@ public class AuctionItemSearchController {
 
     @GetMapping("/elasticsearch")
     public ApiResponse<Page<ItemDocumentResponseDto>> elasticSearchAuctionItems(@PageableDefault(size = 5) Pageable pageable,
-                                                                                @RequestParam(required = false) String keyword) {
+                                                                                @RequestParam(required = false) String keyword) throws IOException {
         if(keyword == null || keyword.isEmpty()) {
             return ApiResponse.ok(searchService.elasticSearchAllAuctionItems(pageable));
         }

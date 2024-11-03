@@ -21,7 +21,4 @@ public class AuctionItemElasticService {
     public void deleteFromElastic(ItemDocument item) {
         itemElasticRepository.delete(item);
     }
-
-
-
 }

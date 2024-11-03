@@ -121,7 +121,7 @@ class AuctionApplicationTests {
     }
 
     @Test
-    public void get_elasticsearch_time_test() {
+    public void get_elasticsearch_time_test() throws IOException {
         int count = 5;
         long sum = 0;
         String[] keyword = {"노트북", "케이스", "셔츠", "이어폰", "의자"};
