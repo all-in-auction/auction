@@ -45,7 +45,9 @@ public class DistributedLockAop {
         } catch (InterruptedException e) {
             throw new ApiException(ErrorStatus._INTERNAL_SERVER_ERROR_COUPON);
         } finally {
-            rLock.unlock();
+            if (rLock != null && rLock.isHeldByCurrentThread()) {
+                rLock.unlock();
+            }
         }
     }
 }
