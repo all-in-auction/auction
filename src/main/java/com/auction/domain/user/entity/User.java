@@ -58,6 +58,18 @@ public class User extends TimeStamped {
         this.authority = userRole;
     }
 
+    public User(Long id, String email, String pw, String name, String nickName, int zipCode, String address1, String address2, String authority) {
+        this.id = id;
+        this.email = email;
+        this.password = pw;
+        this.name = name;
+        this.nickName = nickName;
+        this.zipCode = zipCode;
+        this.address1 = address1;
+        this.address2 = address2;
+        this.authority = UserRole.USER;
+    }
+
     public void changeDeactivate() {
         this.activate = false;
         this.deletedAt = LocalDateTime.now();
