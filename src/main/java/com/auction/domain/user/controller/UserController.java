@@ -18,7 +18,7 @@ import java.util.List;
 public class UserController {
     private final UserService userService;
 
-    @PostMapping("/v1/users")
+    @PostMapping("/v2/users")
     public ApiResponse<UserResponseDto> updateUser(
             @AuthenticationPrincipal AuthUser authUser,
             @RequestBody UserUpdateRequestDto userUpdateRequest) {
@@ -26,14 +26,14 @@ public class UserController {
         return ApiResponse.ok(userService.updateUser(authUser, userUpdateRequest));
     }
 
-    @GetMapping("/v1/users/mypage/sales")
+    @GetMapping("/v2/users/mypage/sales")
     public ApiResponse<List<ItemResponseDto>> getSales(
         @AuthenticationPrincipal AuthUser authUser) {
 
         return ApiResponse.ok(userService.getSales(authUser));
     }
 
-    @GetMapping("/v1/users/mypage/purchases")
+    @GetMapping("/v2/users/mypage/purchases")
     public ApiResponse<List<ItemResponseDto>> getPurchases(
             @AuthenticationPrincipal AuthUser authUser) {
 

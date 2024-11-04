@@ -5,6 +5,7 @@ spring:
     password: ${LOCAL_DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+
   thymeleaf:
     cache: false
     check-template-location: true
@@ -25,11 +26,18 @@ spring:
           max-attempts: 3
           multiplier: 2
 
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS}
+
+
   data:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
       password: ${REDIS_PASSWORD}
+    elasticsearch:
+      repositories:
+        enabled: true
 
   jpa:
     hibernate:
@@ -55,3 +63,21 @@ notification:
   related-url:
     auction: localhost:8080/api/v1/auctions/
     review: localhost:8080/api/v2/reviews/
+
+kafka:
+  topic:
+    coupon: "coupon-claim-topic"
+  consumer:
+    group-id: "coupon-group"
+  producer:
+    bootstrap-servers: "localhost:9092"
+
+logging:
+  level:
+    org:
+      springframework:
+        data:
+          elasticsearch:
+            client:
+              WIRE: TRACE
+
