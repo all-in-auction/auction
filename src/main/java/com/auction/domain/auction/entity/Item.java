@@ -17,6 +17,7 @@ public class Item extends TimeStamped {
 
     @Column(nullable = false, length = 150)
     private String name;
+
     @Column(length = 500)
     private String description;
 

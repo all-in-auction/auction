@@ -15,6 +15,7 @@ import com.auction.domain.auction.dto.response.AuctionResponseDto;
 import com.auction.domain.auction.dto.response.BidCreateResponseDto;
 import com.auction.domain.auction.entity.Auction;
 import com.auction.domain.auction.entity.Item;
+import com.auction.domain.auction.entity.ItemDocument;
 import com.auction.domain.auction.enums.ItemCategory;
 import com.auction.domain.auction.event.dto.AuctionEvent;
 import com.auction.domain.auction.event.dto.RefundEvent;
@@ -56,6 +57,7 @@ public class AuctionService {
     private final PointHistoryService pointHistoryService;
     private final DepositService depositService;
     private final UserService userService;
+    private final AuctionItemElasticService elasticService;
 
     private final AuctionPublisher auctionPublisher;
     private final NotificationService notificationService;
@@ -91,6 +93,7 @@ public class AuctionService {
                 requestDto.getItem().getDescription(),
                 ItemCategory.of(requestDto.getItem().getCategory()));
         Item savedItem = itemRepository.save(item);
+        elasticService.saveToElastic(ItemDocument.from(savedItem));
         Auction auction = Auction.of(savedItem, User.fromAuthUser(authUser), requestDto.getMinPrice(), requestDto.isAutoExtension(), requestDto.getExpireAfter());
         Auction savedAuction = auctionRepository.save(auction);
 
@@ -131,19 +134,16 @@ public class AuctionService {
 
         Item savedItem = itemRepository.save(item);
         auction.changeItem(savedItem);
+        elasticService.saveToElastic(ItemDocument.from(savedItem));
         return AuctionResponseDto.from(auction);
     }
 
     @Transactional
     public String deleteAuctionItem(AuthUser authUser, Long auctionId) {
         Auction auction = getAuctionWithUser(authUser, auctionId);
+        elasticService.deleteFromElastic(ItemDocument.from(auction.getItem()));
         auctionRepository.delete(auction);
         return "물품이 삭제되었습니다.";
-    }
-
-    @Transactional(readOnly = true)
-    public Page<AuctionResponseDto> searchAuctionItems(Pageable pageable, String name, String category, String sortBy) {
-        return auctionRepository.findByCustomSearch(pageable, name, category, sortBy);
     }
 
     @DistributedLock(key = "T(java.lang.String).format('Auction%d', #auctionId)")
