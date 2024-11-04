@@ -40,21 +40,6 @@ public class AuctionQueryController {
     }
 
     /**
-     * 경매 조건 검색
-     * @param pageable 페이지 조건
-     * @param name 경매 이름 검색
-     * @param category 카테고리 검색
-     * @return Page<AuctionResponseDto>
-     */
-    @GetMapping("/search")
-    public ApiResponse<Page<AuctionResponseDto>> searchAuctionItems(@PageableDefault(size = 5) Pageable pageable,
-                                                                    @RequestParam(required = false) String name,
-                                                                    @RequestParam(required = false) String category,
-                                                                    @RequestParam(required = false) String sortBy) {
-        return ApiResponse.ok(auctionQueryService.searchAuctionItems(pageable, name, category, sortBy));
-    }
-
-    /**
      * 경매 랭킹 조회
      * @return List<AuctionRankingResponseDto>
      */

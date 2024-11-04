@@ -70,9 +70,4 @@ public class AuctionQueryService {
         }
         return rankingList;
     }
-
-    @Transactional(readOnly = true)
-    public Page<AuctionResponseDto> searchAuctionItems(Pageable pageable, String name, String category, String sortBy) {
-        return auctionRepository.findByCustomSearch(pageable, name, category, sortBy);
-    }
 }
