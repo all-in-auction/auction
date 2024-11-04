@@ -45,7 +45,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 @Slf4j
-@Service
+//@Service
 @RequiredArgsConstructor
 public class AuctionService {
     private final ItemRepository itemRepository;
