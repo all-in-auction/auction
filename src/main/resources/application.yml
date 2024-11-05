@@ -25,3 +25,7 @@ management:
     web:
       exposure:
         include: "prometheus"
+
+  endpoint:
+    health:
+      show-details: always
