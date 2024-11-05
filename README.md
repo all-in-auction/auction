@@ -120,10 +120,3 @@ CQRS 패턴을 통해 **읽기 작업**과 **쓰기 작업**을 분리하여, �
   <img src="./image/coupon1.png" width="45%" style="display: inline-block; margin-right: 10px;">
   <img src="./image/coupon2.png" width="45%" style="display: inline-block;">
 </div>
-
-<br>
-
-### 3. 스프링 배치를 통한 환불 내역 스케줄링 (예외 처리 보완)
-
-- 경매가 종료된 후 보증금을 환불해야 하는 사용자들을 대상으로 **스프링 배치(Spring Batch)** 를 활용하여 환불 내역을 자동으로 처리했습니다.
-- 주기적인 스케줄링을 통해 환불을 자동 처리하고, 예외 발생 시 재처리 로직을 추가하여 시스템의 안정성을 높였습니다.
