@@ -47,7 +47,9 @@ public class WebSecurityConfig {
                                 "/api/v1/points/buy/confirm",
                                 "/actuator/prometheus",
                                 "/api/v2/auctions/search",
-                                "/api/v2/auctions/elasticsearch"
+                                "/api/v2/auctions/elasticsearch",
+                                "/actuator/health",
+                                "/health"
                         ).permitAll()
                         .requestMatchers("/api/v2/admin/**").hasAuthority(UserRole.Authority.ADMIN)
                         .anyRequest().authenticated()
