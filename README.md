@@ -47,7 +47,7 @@
 
 ### **CI/CD**
 
-<img src="https://img.shields.io/badge/Jenkins-D24939?style=for-the-badge&logo=jenkins&logoColor=white"> <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white"> <img src="https://img.shields.io/badge/githubactions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white">
+<img src="https://img.shields.io/badge/Jenkins-D24939?style=for-the-badge&logo=jenkins&logoColor=white"> <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white">
 
 ### **클라우드 및 모니터링**
 
@@ -100,8 +100,8 @@ CQRS 패턴을 도입하여 경매 시스템의 **입찰 기능 성능**을 크�
 
 #### 💡 성능 개선 요약
 
-- **평균 응답 시간**: 8561ms → 4599ms로 약 46% 감소
-- **오류율**: 0.20% → 0.10%로 절반 감소
+- **평균 응답 시간** : 8561ms → 4599ms로 약 46% 감소
+- **오류율** : 0.20% → 0.10%로 절반 감소
 - **처리량 (Throughput)**: 61.4 요청/초 → 89.0 요청/초로 약 45% 증가
 - **데이터 전송 속도**: 수신 KB/초와 전송 KB/초가 증가하여 데이터 처리 효율성 향상
 
@@ -111,14 +111,10 @@ CQRS 패턴을 통해 **읽기 작업**과 **쓰기 작업**을 분리하여, �
 
 ### 2. 쿠폰 발급 동시성 처리 (분산락 및 Lua 스크립트 적용)
 
-- **Redisson**을 사용해 **분산락(Distributed Lock)**을 구현하여 다수의 사용자가 동시에 쿠폰을 발급 요청할 때 발생하는 동시성 문제를 해결했습니다.
-- **Lua 스크립트**를 통해 Redis에 저장된 쿠폰 수량을 원자적으로 조회하고 업데이트하여 동시성을 관리했습니다.
-   - 하나의 스레드가 쿠폰 발급을 처리하는 동안 다른 스레드
-
-가 접근하지 못하도록 **Lock**을 사용했습니다.
-- **쿠폰 발급**과 같은 추가 작업은 Kafka를 통해 **비동기적으로 처리**하여 성능을 최적화했습니다.
-- **도입 결과**:
-   - 여러 사용자가 동시에 쿠폰을 발급받으려 시도하더라도 동시성 제어에 성공하여, 정해진 수량만큼 정확하게 쿠폰이 발급됨을 확인했습니다.
+- **Redisson** 을 사용해 **분산락(Distributed Lock)**을 구현하여 다수의 사용자가 동시에 쿠폰을 발급 요청할 때 발생하는 동시성 문제를 해결했습니다.
+- **Lua 스크립트** 를 통해 Redis에 저장된 쿠폰 수량을 원자적으로 조회하고 업데이트하여 동시성을 관리했습니다.
+- **쿠폰 발급** 과 같은 추가 작업은 Kafka를 통해 **비동기적으로 처리**하여 성능을 최적화했습니다.
+- **도입 결과** : 여러 사용자가 동시에 쿠폰을 발급받으려 시도하더라도 동시성 제어에 성공하여, 정해진 수량만큼 정확하게 쿠폰이 발급됨을 확인했습니다.
 
 <div align="center">
   <img src="./image/coupon1.png" width="45%" style="display: inline-block; margin-right: 10px;">
@@ -131,7 +127,3 @@ CQRS 패턴을 통해 **읽기 작업**과 **쓰기 작업**을 분리하여, �
 
 - 경매가 종료된 후 보증금을 환불해야 하는 사용자들을 대상으로 **스프링 배치(Spring Batch)** 를 활용하여 환불 내역을 자동으로 처리했습니다.
 - 주기적인 스케줄링을 통해 환불을 자동 처리하고, 예외 발생 시 재처리 로직을 추가하여 시스템의 안정성을 높였습니다.
-
----
-
-이 README는 주요 목적, 기술 스택, 팀 구성, 최적화 전략을 포함하여 프로젝트의 전반적인 구조와 핵심 기능을 한눈에 볼 수 있도록 정리되었습니다.
