@@ -86,11 +86,14 @@
     </springProfile>
 
     <springProfile name="prod">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
         <logger name="com.auction.common.aop.LoggingAspect" level="INFO">
             <appender-ref ref="LOGSTASH"/>-->
 
-            <appender-ref ref="FILE"/>
-            <appender-ref ref="ERROR_FILE"/>
+<!--            <appender-ref ref="FILE"/>-->
+<!--            <appender-ref ref="ERROR_FILE"/>-->
 
         </logger>
     </springProfile>
