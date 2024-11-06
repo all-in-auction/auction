@@ -68,7 +68,6 @@
 <br>
 
 ## 3. 팀 소개
-
 <div align="center">
   <table>
     <tbody>
@@ -78,6 +77,9 @@
           <div style="margin-top: 10px; font-size: 14px; line-height: 1.2;">
             <b>팀장</b><br />
             <a href="https://github.com/devmoonjs" style="font-size: 16px;">문정석</a>
+            <div style="margin-top: 5px; font-size: 14px;">
+              검색<br />경매<br />사용자<br />인프라
+            </div>
           </div>
         </td>
         <td align="center" style="padding: 20px;">
@@ -85,6 +87,9 @@
           <div style="margin-top: 10px; font-size: 14px; line-height: 1.2;">
             <b>부팀장</b><br />
             <a href="https://github.com/kim-na-ram" style="font-size: 16px;">김나람</a>
+            <div style="margin-top: 5px; font-size: 14px;">
+              경매<br />모니터링 시스템<br />쿠폰 만료 처리 배치
+            </div>
           </div>
         </td>
         <td align="center" style="padding: 20px;">
@@ -92,6 +97,9 @@
           <div style="margin-top: 10px; font-size: 14px; line-height: 1.2;">
             <b>팀원</b><br />
             <a href="https://github.com/areum0116" style="font-size: 16px;">김아름</a>
+            <div style="margin-top: 5px; font-size: 14px;">
+              경매<br />알림<br />검색<br />보증금 환불 배치
+            </div>
           </div>
         </td>
         <td align="center" style="padding: 20px;">
@@ -99,6 +107,9 @@
           <div style="margin-top: 10px; font-size: 14px; line-height: 1.2;">
             <b>팀원</b><br />
             <a href="https://github.com/inseooo0" style="font-size: 16px;">황인서</a>
+            <div style="margin-top: 5px; font-size: 14px;">
+              결제<br />쿠폰<br />경매
+            </div>
           </div>
         </td>
       </tr>
