@@ -2,7 +2,7 @@
 
 # 📦 중고 물품 실시간 경매 서비스
 
-## 프로젝트 개요
+## 1. 프로젝트 개요
 **개발 기간:** 2024.10.21 ~ 2024.11.22
 
 `Auction_999` 는 사용자가 실시간으로 물품을 경매할 수 있는 Java Spring 기반의 중고 경매 사이트입니다. 사용자는 경매 등록, 입찰, 실시간 알림을 통해 다른 사용자와의 경쟁을 경험하며, Toss Pay를 통한 안전한 결제를 제공합니다.
@@ -12,7 +12,7 @@
   <p>  <a href="https://teamsparta.notion.site/999-1232dc3ef51480e2a3adc7c23fdd3a40">팀 노션</a></p>
 </details>
 
-## 서비스 플로우
+### 서비스 플로우
 
 1. **경매 물품 등록**  
    판매자가 경매에 `물품을 등록` 하여 시작 가격과 경매 만료 시간을 설정합니다.
@@ -29,13 +29,13 @@
 
 <br>
 
-## 아키텍처
+### 아키텍처
 
 <div align="center">
   <img src="./image/architecture.png" width="80%">
 </div>
 
-## ERD
+### ERD
 
 <div align="center">
   <img src="./image/erd.png" width="80%">
