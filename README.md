@@ -163,3 +163,9 @@ CQRS 패턴을 통해 **읽기 작업** 과 **쓰기 작업** 을 분리하여, 
   <img src="./image/coupon1.png" width="45%" style="display: inline-block; margin-right: 10px;">
   <img src="./image/coupon2.png" width="45%" style="display: inline-block;">
 </div>
+
+
+<details>
+  <summary><strong>기술적 의사결정</strong></summary>
+  <p>  <a href="https://proximal-chance-603.notion.site/Auction999-136bcf97d36a80d89cabf92fa8032236">기술적 의사결정</a></p>
+</details>
