@@ -15,6 +15,7 @@ import com.auction.domain.auction.dto.response.AuctionResponseDto;
 import com.auction.domain.auction.dto.response.BidCreateResponseDto;
 import com.auction.domain.auction.entity.Auction;
 import com.auction.domain.auction.entity.Item;
+import com.auction.domain.auction.entity.ItemDocument;
 import com.auction.domain.auction.enums.ItemCategory;
 import com.auction.domain.auction.event.dto.AuctionEvent;
 import com.auction.domain.auction.event.dto.RefundEvent;
@@ -37,7 +38,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,6 +56,7 @@ public class AuctionService {
     private final PointHistoryService pointHistoryService;
     private final DepositService depositService;
     private final UserService userService;
+    private final AuctionItemElasticService elasticService;
 
     private final AuctionPublisher auctionPublisher;
     private final NotificationService notificationService;
@@ -68,15 +69,9 @@ public class AuctionService {
     public static final String AUCTION_HISTORY_PREFIX = "auction:bid:";
     public static final String AUCTION_RANKING_PREFIX = "auction:ranking:";
 
-    private Auction getAuction(long auctionId) {
+    private Auction getAuctionById(long auctionId) {
         return auctionRepository.findByAuctionId(auctionId)
                 .orElseThrow(() -> new ApiException(ErrorStatus._NOT_FOUND_AUCTION));
-    }
-
-    private Auction getAuctionById(Long auctionId) {
-        return auctionRepository.findById(auctionId).orElseThrow(
-                () -> new ApiException(ErrorStatus._NOT_FOUND_AUCTION_ITEM)
-        );
     }
 
     private Auction getAuctionWithUser(AuthUser authUser, Long auctionId) {
@@ -91,6 +86,7 @@ public class AuctionService {
                 requestDto.getItem().getDescription(),
                 ItemCategory.of(requestDto.getItem().getCategory()));
         Item savedItem = itemRepository.save(item);
+        elasticService.saveToElastic(ItemDocument.from(savedItem));
         Auction auction = Auction.of(savedItem, User.fromAuthUser(authUser), requestDto.getMinPrice(), requestDto.isAutoExtension(), requestDto.getExpireAfter());
         Auction savedAuction = auctionRepository.save(auction);
 
@@ -131,25 +127,22 @@ public class AuctionService {
 
         Item savedItem = itemRepository.save(item);
         auction.changeItem(savedItem);
+        elasticService.saveToElastic(ItemDocument.from(savedItem));
         return AuctionResponseDto.from(auction);
     }
 
     @Transactional
     public String deleteAuctionItem(AuthUser authUser, Long auctionId) {
         Auction auction = getAuctionWithUser(authUser, auctionId);
+        elasticService.deleteFromElastic(ItemDocument.from(auction.getItem()));
         auctionRepository.delete(auction);
         return "물품이 삭제되었습니다.";
-    }
-
-    @Transactional(readOnly = true)
-    public Page<AuctionResponseDto> searchAuctionItems(Pageable pageable, String name, String category, String sortBy) {
-        return auctionRepository.findByCustomSearch(pageable, name, category, sortBy);
     }
 
     @DistributedLock(key = "T(java.lang.String).format('Auction%d', #auctionId)")
     public BidCreateResponseDto createBid(AuthUser authUser, long auctionId, BidCreateRequestDto bidCreateRequestDto) {
         User user = User.fromAuthUser(authUser);
-        Auction auction = getAuction(auctionId);
+        Auction auction = getAuctionById(auctionId);
 
         if (Objects.equals(auction.getSeller().getId(), user.getId())) {
             throw new ApiException(ErrorStatus._INVALID_BID_REQUEST_USER);
@@ -202,7 +195,7 @@ public class AuctionService {
                     for (ZSetOperations.TypedTuple<Object> tuple : tuples) {
                         long userId = Long.parseLong(String.valueOf(tuple.getValue()));
                         int price = Objects.requireNonNull(tuple.getScore()).intValue();
-                        if(userId != user.getId()) {
+                        if (userId != user.getId()) {
                             AuctionHistoryDto auctionHistoryDto = AuctionHistoryDto.of(userId, price);
                             auctionPublisher.refundPublisher(RefundEvent.from(auctionId, auctionHistoryDto));
                         }
@@ -223,7 +216,7 @@ public class AuctionService {
     @Transactional
     public void closeAuction(AuctionEvent auctionEvent) {
         long auctionId = auctionEvent.getAuctionId();
-        Auction auction = getAuction(auctionId);
+        Auction auction = getAuctionById(auctionId);
 
         long originExpiredAt = auctionEvent.getExpiredAt();
         long dataSourceExpiredAt = TimeConverter.toLong(auction.getExpireAt());
@@ -276,11 +269,11 @@ public class AuctionService {
 
         List<AuctionRankingResponseDto> rankingList = new ArrayList<>();
 
-        if(rankings != null) {
+        if (rankings != null) {
             int rank = 1;
             for (ZSetOperations.TypedTuple<Object> ranking : rankings) {
                 long auctionId = Long.parseLong(ranking.getValue().toString());
-                Auction auction = getAuction(auctionId);
+                Auction auction = getAuctionById(auctionId);
                 Integer bidCount = ranking.getScore().intValue();
 
                 rankingList.add(AuctionRankingResponseDto.of(rank++, auctionId, bidCount,
@@ -289,13 +282,6 @@ public class AuctionService {
             }
         }
         return rankingList;
-    }
-
-    // 아침 6시에 경매 랭킹 초기화
-    @Scheduled(cron = "0 0 6 * * *")
-    @Transactional
-    public void resetRankings() {
-        redisTemplate.delete(AUCTION_RANKING_PREFIX);
     }
 
     private void validBidPrice(int bidPrice, Auction auction, String auctionHistoryKey) {

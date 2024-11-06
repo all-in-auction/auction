@@ -3,8 +3,6 @@ spring:
     active: dev
   config:
     import: optional:file:.env[.properties]
-#  jpa:
-#    open-in-view: false
 
 cloud:
   aws:
@@ -26,4 +24,10 @@ management:
   endpoints:
     web:
       exposure:
-        include: "prometheus"
+        include: "prometheus,health"
+
+  endpoint:
+    health:
+      show-details: always
+  security:
+    enabled: false

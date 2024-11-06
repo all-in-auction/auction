@@ -1,9 +1,15 @@
 spring:
   datasource:
-    url: jdbc:mysql://auction-rds-db.cnya6424giqr.ap-northeast-2.rds.amazonaws.com:3306/auction
-    username: admin
-    password: ${PROD_DB_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    master:
+      jdbc-url: ${MASTER_DB_URL}
+      username: root
+      password: ${MASTER_DB_PW}
+      driver-class-name: com.mysql.cj.jdbc.Driver
+    slave:
+      jdbc-url: ${SLAVE_DB_URL}
+      username: root
+      password: ${SLAVE_DB_PW}
+      driver-class-name: com.mysql.cj.jdbc.Driver
 
   thymeleaf:
     cache: false
@@ -30,6 +36,10 @@ spring:
       host: ${REDIS_HOST}
       port: 6379
       password: ${REDIS_PASSWORD}
+    elasticsearch:
+      repositories:
+        enabled: true
+
 
   jpa:
     hibernate:
@@ -40,6 +50,9 @@ spring:
         show_sql: true
         format_sql: true
         use_sql_comments: true
+
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS}
 
 payment:
   client:
@@ -55,3 +68,24 @@ notification:
   related-url:
     auction: auctionlb-1965560899.ap-northeast-2.elb.amazonaws.com:80/api/v1/auctions/
     review: auctionlb-1965560899.ap-northeast-2.elb.amazonaws.com:80/api/v2/reviews/
+
+
+kafka:
+  topic:
+    coupon: "coupon-claim-topic"
+  consumer:
+    group-id: "coupon-group"
+  producer:
+    bootstrap-servers: ${KAFKA_HOST}
+
+---
+spring:
+  config.activate.on-profile: master
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+logging:
+  level:
+    root: DEBUG
+
