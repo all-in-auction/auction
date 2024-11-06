@@ -6,13 +6,13 @@
     <timestamp key="DATETIME" datePattern="yyyy-MM-dd"/>
 
     <!-- LOGSTASH -->
-<!--    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">-->
-<!--        <destination>${LOGSTASH_HOST}:${LOGSTASH_PORT}</destination>-->
-<!--        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>-->
-<!--        <layout class="net.logstash.logback.layout.LogstashLayout">-->
-<!--            <timestampPattern>yyyy-MM-dd' 'HH:mm:ss.SSS</timestampPattern>-->
-<!--        </layout>-->
-<!--    </appender>-->
+    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>${LOGSTASH_HOST}:${LOGSTASH_PORT}</destination>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+        <layout class="net.logstash.logback.layout.LogstashLayout">
+            <timestampPattern>yyyy-MM-dd' 'HH:mm:ss.SSS</timestampPattern>
+        </layout>
+    </appender>
 
     <!-- FLUENTD -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -86,12 +86,15 @@
     </springProfile>
 
     <springProfile name="prod">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
         <logger name="com.auction.common.aop.LoggingAspect" level="INFO">
-<!--            <appender-ref ref="LOGSTASH"/>-->
-            <!--
-            <appender-ref ref="FILE"/>
-            <appender-ref ref="ERROR_FILE"/>
-            -->
+            <appender-ref ref="LOGSTASH"/>-->
+
+<!--            <appender-ref ref="FILE"/>-->
+<!--            <appender-ref ref="ERROR_FILE"/>-->
+
         </logger>
     </springProfile>
 

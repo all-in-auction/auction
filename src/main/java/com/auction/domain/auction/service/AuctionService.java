@@ -69,15 +69,9 @@ public class AuctionService {
     public static final String AUCTION_HISTORY_PREFIX = "auction:bid:";
     public static final String AUCTION_RANKING_PREFIX = "auction:ranking:";
 
-    private Auction getAuction(long auctionId) {
+    private Auction getAuctionById(long auctionId) {
         return auctionRepository.findByAuctionId(auctionId)
                 .orElseThrow(() -> new ApiException(ErrorStatus._NOT_FOUND_AUCTION));
-    }
-
-    private Auction getAuctionById(Long auctionId) {
-        return auctionRepository.findById(auctionId).orElseThrow(
-                () -> new ApiException(ErrorStatus._NOT_FOUND_AUCTION_ITEM)
-        );
     }
 
     private Auction getAuctionWithUser(AuthUser authUser, Long auctionId) {
@@ -148,7 +142,7 @@ public class AuctionService {
     @DistributedLock(key = "T(java.lang.String).format('Auction%d', #auctionId)")
     public BidCreateResponseDto createBid(AuthUser authUser, long auctionId, BidCreateRequestDto bidCreateRequestDto) {
         User user = User.fromAuthUser(authUser);
-        Auction auction = getAuction(auctionId);
+        Auction auction = getAuctionById(auctionId);
 
         if (Objects.equals(auction.getSeller().getId(), user.getId())) {
             throw new ApiException(ErrorStatus._INVALID_BID_REQUEST_USER);
@@ -201,7 +195,7 @@ public class AuctionService {
                     for (ZSetOperations.TypedTuple<Object> tuple : tuples) {
                         long userId = Long.parseLong(String.valueOf(tuple.getValue()));
                         int price = Objects.requireNonNull(tuple.getScore()).intValue();
-                        if(userId != user.getId()) {
+                        if (userId != user.getId()) {
                             AuctionHistoryDto auctionHistoryDto = AuctionHistoryDto.of(userId, price);
                             auctionPublisher.refundPublisher(RefundEvent.from(auctionId, auctionHistoryDto));
                         }
@@ -222,7 +216,7 @@ public class AuctionService {
     @Transactional
     public void closeAuction(AuctionEvent auctionEvent) {
         long auctionId = auctionEvent.getAuctionId();
-        Auction auction = getAuction(auctionId);
+        Auction auction = getAuctionById(auctionId);
 
         long originExpiredAt = auctionEvent.getExpiredAt();
         long dataSourceExpiredAt = TimeConverter.toLong(auction.getExpireAt());
@@ -275,11 +269,11 @@ public class AuctionService {
 
         List<AuctionRankingResponseDto> rankingList = new ArrayList<>();
 
-        if(rankings != null) {
+        if (rankings != null) {
             int rank = 1;
             for (ZSetOperations.TypedTuple<Object> ranking : rankings) {
                 long auctionId = Long.parseLong(ranking.getValue().toString());
-                Auction auction = getAuction(auctionId);
+                Auction auction = getAuctionById(auctionId);
                 Integer bidCount = ranking.getScore().intValue();
 
                 rankingList.add(AuctionRankingResponseDto.of(rank++, auctionId, bidCount,
@@ -289,13 +283,6 @@ public class AuctionService {
         }
         return rankingList;
     }
-
-    // 아침 6시에 경매 랭킹 초기화
-//    @Scheduled(cron = "0 0 6 * * *")
-//    @Transactional
-//    public void resetRankings() {
-//        redisTemplate.delete(AUCTION_RANKING_PREFIX);
-//    }
 
     private void validBidPrice(int bidPrice, Auction auction, String auctionHistoryKey) {
         Long size = redisTemplate.opsForZSet().zCard(auctionHistoryKey);
