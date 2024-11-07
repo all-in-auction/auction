@@ -75,7 +75,7 @@ kafka:
   consumer:
     group-id: "coupon-group"
   producer:
-    bootstrap-servers: "localhost:9092"
+    bootstrap-servers: "127.0.0.1:19092, 127.0.0.1:19093, 127.0.0.1:19094"
 
 logging:
   level:
