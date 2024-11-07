@@ -45,7 +45,6 @@ public class AuctionSearchService {
         Query query = MatchQuery.of(m -> m
                 .field("name")
                 .query(keyword)
-                .fuzziness("AUTO")
         )._toQuery();
 
         SearchRequest searchRequest = SearchRequest.of(s -> s
