@@ -27,14 +27,14 @@ public class KafkaAuctionConsumer {
     private final DepositService depositService;
 
     @KafkaListener(topics = "refund-point-topic", groupId = "refund-group")
-    public void refundConsumer(String message) {
+    public void refundConsumer(RefundEvent refundEvent) {
         try {
-            log.info("RefundEvent = {}", message);
-            RefundEvent refundEvent = objectMapper.readValue(message, RefundEvent.class);
+            log.info("RefundEvent = {}", refundEvent);
+//            RefundEvent refundEvent = objectMapper.readValue(message, RefundEvent.class);
             depositService.deleteDeposit(refundEvent.getUserId(), refundEvent.getAuctionId());
             pointService.increasePoint(refundEvent.getUserId(), refundEvent.getDeposit());
             pointHistoryService.createPointHistory(User.fromUserId(refundEvent.getUserId()), refundEvent.getDeposit(), PaymentType.REFUND);
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             log.error(e.getMessage());
         }
     }
