@@ -20,7 +20,6 @@ import com.auction.domain.auction.enums.ItemCategory;
 import com.auction.domain.auction.event.dto.AuctionEvent;
 import com.auction.domain.auction.event.dto.RefundEvent;
 import com.auction.domain.auction.event.publish.AuctionPublisher;
-import com.auction.domain.auction.event.publish.KafkaRefundProducer;
 import com.auction.domain.auction.repository.AuctionRepository;
 import com.auction.domain.auction.repository.ItemRepository;
 import com.auction.domain.deposit.service.DepositService;
@@ -64,7 +63,7 @@ public class AuctionService {
     private final NotificationService notificationService;
 
     private final RedisTemplate<String, Object> redisTemplate;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final KafkaTemplate<String, RefundEvent> kafkaTemplate;
 
     @Value("${kafka.topic.refund}")
     private String refundTopic;
