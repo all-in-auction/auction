@@ -2,8 +2,11 @@ package com.auction.config;
 
 import com.auction.domain.auction.event.dto.RefundEvent;
 import com.auction.domain.coupon.dto.CouponClaimMessage;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,14 +14,22 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.*;
+import org.springframework.kafka.listener.ContainerProperties;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.kafka.support.ProducerListener;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
+import org.springframework.retry.backoff.FixedBackOffPolicy;
+import org.springframework.retry.policy.SimpleRetryPolicy;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.util.backoff.FixedBackOff;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Configuration
 @EnableTransactionManagement
 public class KafkaConfig {
@@ -34,6 +45,10 @@ public class KafkaConfig {
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         configProps.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, "org.apache.kafka.clients.producer.RoundRobinPartitioner");
         configProps.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, "transactional-id");  // 원자성 위해 transaction id 추가
+
+        // 모든 레플리카에서 전송 완료 시 ack
+        configProps.put(ProducerConfig.ACKS_CONFIG, "all");
+
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
@@ -69,6 +84,8 @@ public class KafkaConfig {
         configProps.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
         configProps.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, StringDeserializer.class.getName());
         configProps.put(JsonDeserializer.TRUSTED_PACKAGES, "com.auction.domain.coupon.dto, com.auction.domain.auction.event.dto");
+        configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 
@@ -89,6 +106,24 @@ public class KafkaConfig {
     // 환불용 KafkaListenerContainerFactory 빈 정의
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, RefundEvent> refundKafkaListenerContainerFactory() {
-        return createKafkaListenerContainerFactory(createConsumerFactory("refundGroup", RefundEvent.class));
+        ConcurrentKafkaListenerContainerFactory<String, RefundEvent> factory =  createKafkaListenerContainerFactory(createConsumerFactory("refundGroup", RefundEvent.class));
+        factory.setCommonErrorHandler(refundErrorHandler());
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
+
+        return factory;
+    }
+
+    @Bean
+    // Consumer 로직에서 예외 발생 시 재시도 로직 ErrorHandler
+    public DefaultErrorHandler refundErrorHandler() {
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler((consumerRecord, exception) -> {
+            log.error("[Error] topic = {}, key = {}, value = {}, error message = {}",
+                    consumerRecord.topic(),
+                    consumerRecord.key(),
+                    consumerRecord.value(),
+                    exception.getMessage());
+        }, new FixedBackOff(1000L, 10)); // 1초 간격으로 최대 10번 재시도
+
+        return errorHandler;
     }
 }
