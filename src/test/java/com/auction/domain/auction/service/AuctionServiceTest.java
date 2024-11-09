@@ -20,6 +20,7 @@ import com.auction.domain.pointHistory.service.PointHistoryService;
 import com.auction.domain.user.entity.User;
 import com.auction.domain.user.enums.UserRole;
 import com.auction.domain.user.service.UserService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -76,6 +77,11 @@ class AuctionServiceTest {
     private KafkaTemplate<String, RefundEvent> kafkaTemplate;
     @InjectMocks
     private AuctionService auctionService;
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(auctionService, "refundTopic", "refund-point-topic");
+    }
 
     @Test
     public void 연장된_경매() {
@@ -499,37 +505,36 @@ class AuctionServiceTest {
         verify(kafkaTemplate, never()).send(anyString(), any(RefundEvent.class));
     }
 
-//    @Test
-//    @Transactional
-//    @Rollback
-//    public void 서비스_로직_정상_실행시_카프카_메시지_전송() {
-//        // given
-//        long auctionId = 1L;
-//        AuthUser authUser = new AuthUser(2L, "email@email.com", UserRole.USER);
-//        BidCreateRequestDto bidCreateRequestDto = new BidCreateRequestDto(2000);
-//
-//        Auction auction = auction();
-//        Set<ZSetOperations.TypedTuple<Object>> tuples = Set.of(
-//                ZSetOperations.TypedTuple.of(3L, 1000.0)
-//        );
-//
-//        given(auctionRepository.findByAuctionId(anyLong())).willReturn(Optional.of(auction));
-//        given(redisTemplate.opsForZSet()).willReturn(zSetOperations);
-////        given(zSetOperations.zCard(anyString())).willReturn(1L);
-//        given(zSetOperations.reverseRangeWithScores(anyString(), eq(0L), eq(0L))).willReturn(tuples);
-//        given(pointRepository.findPointByUserId(anyLong())).willReturn(bidCreateRequestDto().getPrice());
-//
-//        // when
-//        auctionService.createBid(authUser, auctionId, bidCreateRequestDto);
-//
-//        // then: Kafka 메시지가 특정 토픽에 전송되었는지 검증
-//        ArgumentCaptor<RefundEvent> refundEventCaptor = ArgumentCaptor.forClass(RefundEvent.class);
-//        verify(kafkaTemplate).send(eq("refund-point-topic"), refundEventCaptor.capture()); // refundTopic에 전송 검증
-//
-//        // 전송된 RefundEvent 내용 검증
-//        RefundEvent sentEvent = refundEventCaptor.getValue();
-//        assertThat(sentEvent.getAuctionId()).isEqualTo(auctionId);
-//        assertThat(sentEvent.getUserId()).isEqualTo(3L); // 이전 최고 입찰자의 userId
-//        assertThat(sentEvent.getDeposit()).isEqualTo(1000); // 환불 금액 검증
-//    }
+    @Test
+    @Transactional
+    @Rollback
+    public void 서비스_로직_정상_실행시_카프카_메시지_전송() {
+        // given
+        long auctionId = 1L;
+        AuthUser authUser = new AuthUser(2L, "email@email.com", UserRole.USER);
+        BidCreateRequestDto bidCreateRequestDto = new BidCreateRequestDto(2000);
+
+        Auction auction = auction();
+        Set<ZSetOperations.TypedTuple<Object>> tuples = Set.of(
+                ZSetOperations.TypedTuple.of(3L, 1000.0)
+        );
+
+        given(auctionRepository.findByAuctionId(anyLong())).willReturn(Optional.of(auction));
+        given(redisTemplate.opsForZSet()).willReturn(zSetOperations);
+        given(zSetOperations.reverseRangeWithScores(anyString(), eq(0L), eq(0L))).willReturn(tuples);
+        given(pointRepository.findPointByUserId(anyLong())).willReturn(bidCreateRequestDto().getPrice());
+
+        // when
+        auctionService.createBid(authUser, auctionId, bidCreateRequestDto);
+
+        // then: Kafka 메시지가 특정 토픽에 전송되었는지 검증
+        ArgumentCaptor<RefundEvent> refundEventCaptor = ArgumentCaptor.forClass(RefundEvent.class);
+        verify(kafkaTemplate).send(eq("refund-point-topic"), refundEventCaptor.capture());
+
+        // 전송된 RefundEvent 내용 검증
+        RefundEvent sentEvent = refundEventCaptor.getValue();
+        assertThat(sentEvent.getAuctionId()).isEqualTo(auctionId);
+        assertThat(sentEvent.getUserId()).isEqualTo(3L); // 이전 최고 입찰자의 userId
+        assertThat(sentEvent.getDeposit()).isEqualTo(1000); // 환불 금액 검증
+    }
 }
