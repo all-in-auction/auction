@@ -37,29 +37,14 @@ public class KafkaConfig {
     @Value("${kafka.producer.bootstrap-servers}")
     private String kafkaServer;
 
-    @Bean
-    public ProducerFactory<String, CouponClaimMessage> producerFactory() {
+    // 공통 ProducerFactory
+    private <T> ProducerFactory<String, T> createProducerFactory(Class<T> valueType) {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaServer);
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         configProps.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, "org.apache.kafka.clients.producer.RoundRobinPartitioner");
-        return new DefaultKafkaProducerFactory<>(configProps);
-    }
-
-    // KafkaTemplate 빈 정의
-    @Bean
-    public KafkaTemplate<String, CouponClaimMessage> kafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory());
-    }
-
-    @Bean
-    public ProducerFactory<String, RefundEvent> refundProducerFactory() {
-        Map<String, Object> configProps = new HashMap<>();
-        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaServer);
-        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-        configProps.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, "org.apache.kafka.clients.producer.RoundRobinPartitioner");
+        configProps.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, "transactional-id");  // 원자성 위해 transaction id 추가
 
         // 모든 레플리카에서 전송 완료 시 ack
         configProps.put(ProducerConfig.ACKS_CONFIG, "all");
@@ -67,70 +52,61 @@ public class KafkaConfig {
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
-    // refund KafkaTemplate 빈 정의
+    // 공통 KafkaTemplate 빈
+    private <T> KafkaTemplate<String, T> createKafkaTemplate(Class<T> valueType) {
+        return new KafkaTemplate<>(createProducerFactory(valueType));
+    }
+
+    // 쿠폰용 KafkaTemplate 빈 정의
+    @Bean
+    public KafkaTemplate<String, CouponClaimMessage> couponKafkaTemplate() {
+        KafkaTemplate<String, CouponClaimMessage> kafkaTemplate = createKafkaTemplate(CouponClaimMessage.class);
+        kafkaTemplate.setTransactionIdPrefix("coupon-");
+        return kafkaTemplate;
+    }
+
+    // 환불용 KafkaTemplate 빈 정의
     @Bean
     public KafkaTemplate<String, RefundEvent> refundKafkaTemplate() {
-        KafkaTemplate<String, RefundEvent> kafkaTemplate = new KafkaTemplate<>(refundProducerFactory());
-
-        kafkaTemplate.setProducerListener(new ProducerListener<>() {
-
-            @Override
-            public void onError(ProducerRecord<String, RefundEvent> producerRecord, RecordMetadata recordMetadata, Exception exception) {
-                System.err.println("Message sending failed: " + producerRecord.value());
-                exception.printStackTrace();
-            }
-        });
-        return new KafkaTemplate<>(refundProducerFactory());
+        KafkaTemplate<String, RefundEvent> kafkaTemplate = createKafkaTemplate(RefundEvent.class);
+        kafkaTemplate.setTransactionIdPrefix("refund-");    // 트랜잭션 id 접두사 설정
+        return kafkaTemplate;
     }
 
-    // ConsumerFactory 빈 정의
-    @Bean
-    public ConsumerFactory<String, CouponClaimMessage> consumerFactory() {
+
+    // 공통 ConsumerFactory
+    private <T> ConsumerFactory<String, T> createConsumerFactory(String groupId, Class<T> valueType) {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaServer);
-        configProps.put(ConsumerConfig.GROUP_ID_CONFIG, "couponGroup");
+        configProps.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         configProps.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
         configProps.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, StringDeserializer.class.getName());
-        // 신뢰할 수 있는 패키지 설정
         configProps.put(JsonDeserializer.TRUSTED_PACKAGES, "com.auction.domain.coupon.dto, com.auction.domain.auction.event.dto");
-
-        return new DefaultKafkaConsumerFactory<>(configProps);
-    }
-
-    // KafkaListenerContainerFactory 빈 정의
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, CouponClaimMessage> kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, CouponClaimMessage> factory =
-                new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(consumerFactory());
-        return factory;
-    }
-
-    // refund ConsumerFactory 빈 정의
-    @Bean
-    public ConsumerFactory<String, RefundEvent> refundConsumerFactory() {
-        Map<String, Object> configProps = new HashMap<>();
-        configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaServer);
-        configProps.put(ConsumerConfig.GROUP_ID_CONFIG, "refundGroup");
-        configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-        configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-        configProps.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
-        configProps.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, StringDeserializer.class.getName());
-        // 신뢰할 수 있는 패키지 설정
-        configProps.put(JsonDeserializer.TRUSTED_PACKAGES, "com.auction.domain.auction.event.dto, com.auction.domain.coupon.dto");
-        // 커밋 수동으로 설정
         configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
 
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 
-    // refund KafkaListenerContainerFactory 빈 정의
+    // 공통 KafkaListenerContainerFactory 빈
+    private <T> ConcurrentKafkaListenerContainerFactory<String, T> createKafkaListenerContainerFactory(
+            ConsumerFactory<String, T> consumerFactory) {
+        ConcurrentKafkaListenerContainerFactory<String, T> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory);
+        return factory;
+    }
+
+    // 쿠폰용 KafkaListenerContainerFactory 빈 정의
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, CouponClaimMessage> kafkaListenerContainerFactory() {
+        return createKafkaListenerContainerFactory(createConsumerFactory("couponGroup", CouponClaimMessage.class));
+    }
+
+    // 환불용 KafkaListenerContainerFactory 빈 정의
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, RefundEvent> refundKafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, RefundEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(refundConsumerFactory());
+        ConcurrentKafkaListenerContainerFactory<String, RefundEvent> factory =  createKafkaListenerContainerFactory(createConsumerFactory("refundGroup", RefundEvent.class));
         factory.setCommonErrorHandler(refundErrorHandler());
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
 
