@@ -20,6 +20,7 @@ import com.auction.domain.pointHistory.service.PointHistoryService;
 import com.auction.domain.user.entity.User;
 import com.auction.domain.user.enums.UserRole;
 import com.auction.domain.user.service.UserService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -76,6 +77,11 @@ class AuctionServiceTest {
     private KafkaTemplate<String, RefundEvent> kafkaTemplate;
     @InjectMocks
     private AuctionService auctionService;
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(auctionService, "refundTopic", "refund-point-topic");
+    }
 
     @Test
     public void 연장된_경매() {
@@ -515,7 +521,6 @@ class AuctionServiceTest {
 
         given(auctionRepository.findByAuctionId(anyLong())).willReturn(Optional.of(auction));
         given(redisTemplate.opsForZSet()).willReturn(zSetOperations);
-//        given(zSetOperations.zCard(anyString())).willReturn(1L);
         given(zSetOperations.reverseRangeWithScores(anyString(), eq(0L), eq(0L))).willReturn(tuples);
         given(pointRepository.findPointByUserId(anyLong())).willReturn(bidCreateRequestDto().getPrice());
 
@@ -524,7 +529,7 @@ class AuctionServiceTest {
 
         // then: Kafka 메시지가 특정 토픽에 전송되었는지 검증
         ArgumentCaptor<RefundEvent> refundEventCaptor = ArgumentCaptor.forClass(RefundEvent.class);
-        verify(kafkaTemplate).send("refund-point-topic", refundEventCaptor.capture()); // refundTopic에 전송 검증
+        verify(kafkaTemplate).send(eq("refund-point-topic"), refundEventCaptor.capture());
 
         // 전송된 RefundEvent 내용 검증
         RefundEvent sentEvent = refundEventCaptor.getValue();
