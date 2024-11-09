@@ -33,6 +33,7 @@ public class KafkaConfig {
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         configProps.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, "org.apache.kafka.clients.producer.RoundRobinPartitioner");
+        configProps.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, "transactional-id");  // 원자성 위해 transaction id 추가
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
@@ -44,13 +45,17 @@ public class KafkaConfig {
     // 쿠폰용 KafkaTemplate 빈 정의
     @Bean
     public KafkaTemplate<String, CouponClaimMessage> couponKafkaTemplate() {
-        return createKafkaTemplate(CouponClaimMessage.class);
+        KafkaTemplate<String, CouponClaimMessage> kafkaTemplate = createKafkaTemplate(CouponClaimMessage.class);
+        kafkaTemplate.setTransactionIdPrefix("coupon-");
+        return kafkaTemplate;
     }
 
     // 환불용 KafkaTemplate 빈 정의
     @Bean
     public KafkaTemplate<String, RefundEvent> refundKafkaTemplate() {
-        return createKafkaTemplate(RefundEvent.class);
+        KafkaTemplate<String, RefundEvent> kafkaTemplate = createKafkaTemplate(RefundEvent.class);
+        kafkaTemplate.setTransactionIdPrefix("refund-");    // 트랜잭션 id 접두사 설정
+        return kafkaTemplate;
     }
 
 
