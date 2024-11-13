@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package point;
+
+// 해당 proto 파일로 컴파일된 자바 파일이 위치할 곳
+option java_package = "com.auction";
+
+service PointService {
+
+  rpc CreatePoint(CreatePointRequest) returns (CreatePointResponse);
+}
+
+message CreatePointRequest {
+  int64 user_id = 1; // 사용자 ID
+}
+
+message CreatePointResponse {
+  string status = 1; // 응답 상태
+}
+
+message PointDto {
+  int64 id = 1; // Point ID
+  int64 user_id = 2; // 사용자 ID
+  int32 point_amount = 3; // 포인트 금액
+}
