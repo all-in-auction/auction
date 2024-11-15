@@ -71,14 +71,19 @@ notification:
     auction: auctionlb-1965560899.ap-northeast-2.elb.amazonaws.com:80/api/v1/auctions/
     review: auctionlb-1965560899.ap-northeast-2.elb.amazonaws.com:80/api/v2/reviews/
 
-
 kafka:
   topic:
+    refund: "refund-point-topic"
     coupon: "coupon-claim-topic"
   consumer:
-    group-id: "coupon-group"
+    coupon-group:
+      group-id: "coupon-group"
+    refund-group:
+      group-id: "refund-group"
   producer:
-    bootstrap-servers: ${KAFKA_HOST}
+    bootstrap-servers: "${KAFKA_HOST}:19092, ${KAFKA_HOST}:19093, ${KAFKA_HOST}:19094"
+    properties:
+      num.partitions: 3
 
 ---
 spring:
