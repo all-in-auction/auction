@@ -81,7 +81,7 @@ kafka:
     refund-group:
       group-id: "refund-group"
   producer:
-    bootstrap-servers: "${KAFKA_HOST}:19092, ${KAFKA_HOST}:19093, ${KAFKA_HOST}:19094"
+    bootstrap-servers: "${KAFKA_HOST}:19092,${KAFKA_HOST}:19093,${KAFKA_HOST}:19094"
     properties:
       num.partitions: 3
 
