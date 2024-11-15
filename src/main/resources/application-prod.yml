@@ -53,8 +53,8 @@ spring:
 
   elasticsearch:
     uris: ${ELASTICSEARCH_URIS}
-    username: elastic
-    password: 000000
+    username: ${ELASTICSEARCH_USERNAME}
+    password: ${ELASTICSEARCH_PASSWORD}
 
 payment:
   client:
