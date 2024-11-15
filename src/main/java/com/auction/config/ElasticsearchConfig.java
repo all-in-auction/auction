@@ -25,7 +25,7 @@ public class ElasticsearchConfig {
 //    }
     @Bean
     public RestHighLevelClient client() {
-        RestClientBuilder builder = RestClient.builder(new HttpHost("ec2-3-35-3-214.ap-northeast-2.compute.amazonaws.com", 9200, "http"));
+        RestClientBuilder builder = RestClient.builder(new HttpHost(url, 9200, "http"));
         return new RestHighLevelClient(builder);
     }
 
