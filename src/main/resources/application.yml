@@ -6,7 +6,6 @@ spring:
   application:
     name: auction-service
 
-
 cloud:
   aws:
     s3:
