@@ -61,6 +61,10 @@ public class AuctionService {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final PointServiceGrpc.PointServiceBlockingStub pointServiceStub;
+    private final KafkaTemplate<String, RefundEvent> kafkaTemplate;
+
+    @Value("${kafka.topic.refund}")
+    private String refundTopic;
 
     @Value("${notification.related-url.auction}")
     private String relatedAuctionUrl;
@@ -207,6 +211,7 @@ public class AuctionService {
                         int price = Objects.requireNonNull(tuple.getScore()).intValue();
                         if (userId != user.getId()) {
                             AuctionHistoryDto auctionHistoryDto = AuctionHistoryDto.of(userId, price);
+                            kafkaTemplate.send(refundTopic, RefundEvent.from(auctionId, auctionHistoryDto));
                         }
                     }
                 });
