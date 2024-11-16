@@ -182,7 +182,7 @@ public class AuctionService {
                     // TODO : gRPC 변환
                     grpcDecreasePoint(user.getId(), gap);
                     // TODO : gRPC 변환
-                    createPointHistory(user.getId(), gap, PaymentType.SPEND);
+                    createPointHistory(user.getId(), gap, Point.PaymentType.SPEND);
 //                    pointHistoryService.createPointHistory(user, gap, PaymentType.SPEND);
                 },
                 () -> {
@@ -190,7 +190,7 @@ public class AuctionService {
                     grpcDecreasePoint(user.getId(), bidPrice);
 //                    pointService.decreasePoint(user.getId(), bidPrice);
                     // TODO : gRPC 변환
-                    createPointHistory(user.getId(), bidPrice, PaymentType.SPEND);
+                    createPointHistory(user.getId(), bidPrice, Point.PaymentType.SPEND);
 //                    pointHistoryService.createPointHistory(user, bidPrice, PaymentType.SPEND);
                 }
         );
@@ -258,12 +258,12 @@ public class AuctionService {
         }
     }
 
-    public void createPointHistory(long userId, int amount, PaymentType paymentType) {
+    public void createPointHistory(long userId, int amount, Point.PaymentType paymentType) {
         try {
             Point.CreatePointHistoryRequest grpcRequest = Point.CreatePointHistoryRequest.newBuilder()
                     .setUserId(userId)
                     .setAmount(amount)
-                    .setPaymentType(Point.PaymentType.SPEND)
+                    .setPaymentType(paymentType)
                     .build();
 
             Point.CreatePointHistoryResponse grpcResponse = pointServiceStub.createPointHistory(grpcRequest);
