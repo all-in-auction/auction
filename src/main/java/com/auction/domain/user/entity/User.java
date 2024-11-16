@@ -6,6 +6,7 @@ import com.auction.domain.auth.dto.request.SignupRequestDto;
 import com.auction.domain.user.dto.request.UserUpdateRequestDto;
 import com.auction.domain.user.enums.UserRole;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,20 +23,32 @@ public class User extends TimeStamped {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull
     @Column(unique = true)
     private String email;
 
+    @NotNull
     private String password;
+
+    @NotNull
     private String name;
+
+    @Column(name = "nick_name")
     private String nickName;
+
+    @Column(name = "zip_code")
     private int zipCode;
     private String address1;
     private String address2;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     private UserRole authority;
 
+    @NotNull
     private boolean activate;
+
+    @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
     public User(String encodedPassword, SignupRequestDto requestDto) {
