@@ -56,6 +56,14 @@ spring:
     username: ${ELASTICSEARCH_USERNAME}
     password: ${ELASTICSEARCH_PASSWORD}
 
+  cloud:
+    openfeign:
+      url: ${POINT_SERVER_URL}/api/internal
+
+  cloud:
+    openfeign:
+      url: ${POINT_SERVER_URL}/api/internal
+
 payment:
   client:
     key: ${PAYMENT_CLIENT_KEY}

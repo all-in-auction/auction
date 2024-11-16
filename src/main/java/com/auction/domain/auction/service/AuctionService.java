@@ -29,6 +29,9 @@ import com.auction.domain.notification.enums.NotificationType;
 import com.auction.domain.notification.service.NotificationService;
 import com.auction.domain.user.entity.User;
 import com.auction.domain.user.service.UserService;
+import com.auction.feign.dto.request.PointChangeRequestDto;
+import com.auction.feign.enums.PaymentType;
+import com.auction.feign.service.PointService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,8 +53,7 @@ public class AuctionService {
     private final ItemRepository itemRepository;
     private final AuctionRepository auctionRepository;
 
-    //    private final PointService pointService;
-//    private final PointHistoryService pointHistoryService;
+    private final PointService pointService;
     private final DepositService depositService;
     private final UserService userService;
     private final AuctionItemElasticService elasticService;
@@ -299,6 +301,10 @@ public class AuctionService {
             return;
         }
 
+        // redis key 삭제
+        redisTemplate.delete(auctionHistoryKey);
+        redisTemplate.opsForZSet().remove(AUCTION_RANKING_PREFIX, String.valueOf(auctionId));
+
         Set<Object> result = redisTemplate.opsForZSet().reverseRange(auctionHistoryKey, 0, 0);
         if (result == null || result.isEmpty()) {
             // 경매 유찰 알림
@@ -306,10 +312,6 @@ public class AuctionService {
                     "경매 아이디 " + auctionId + "이(가) 유찰되었습니다.", relatedAuctionUrl + auctionId);
         } else {
             // 경매 낙찰
-            // 판매자 포인트 증가
-//            pointService.increasePoint(auction.getSeller().getId(), auction.getMaxPrice());
-//            pointHistoryService.createPointHistory(auction.getSeller(), auction.getMaxPrice(), PaymentType.RECEIVE);
-
             // 구매자 경매 이력 수정
             String buyerId = (String) result.iterator().next();
             User buyer = userService.getUser(Long.parseLong(buyerId));
@@ -325,10 +327,11 @@ public class AuctionService {
                     NotificationType.AUCTION,
                     "입찰한 " + auction.getItem().getName() + "이(가) 낙찰되었습니다!",
                     relatedAuctionUrl + auctionId);
+
+            // 판매자 포인트 증가
+            PointChangeRequestDto pointChangeRequestDto = PointChangeRequestDto.of(auction.getMaxPrice(), PaymentType.RECEIVE);
+            pointService.changePoint(auction.getSeller().getId(), pointChangeRequestDto);
         }
-        // redis key 삭제
-        redisTemplate.delete(auctionHistoryKey);
-        redisTemplate.opsForZSet().remove(AUCTION_RANKING_PREFIX, String.valueOf(auctionId));
     }
 
     @Transactional(readOnly = true)

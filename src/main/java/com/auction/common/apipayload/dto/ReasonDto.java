@@ -1,17 +1,19 @@
 package com.auction.common.apipayload.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
 
 @Builder
 @Getter
-@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
 public class ReasonDto {
 
-    private final String statusCode;
-    private final String message;
-    private final HttpStatus httpStatus;
-    private final Boolean success;
+    private String statusCode;
+    private String message;
+    private HttpStatus httpStatus;
+    private Boolean success;
 }

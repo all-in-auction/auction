@@ -3,6 +3,7 @@ package com.auction.domain.coupon.service;
 import com.auction.common.apipayload.status.ErrorStatus;
 import com.auction.common.entity.AuthUser;
 import com.auction.common.exception.ApiException;
+import com.auction.domain.coupon.dto.request.CouponCreateRequestDto;
 import com.auction.domain.coupon.entity.Coupon;
 import com.auction.domain.coupon.entity.CouponUser;
 import com.auction.domain.coupon.repository.CouponUserRepository;
@@ -43,7 +44,7 @@ class CouponUserServiceTest {
         AuthUser authUser = new AuthUser(1L, "test@email.com", UserRole.USER);
         int amount = 10000;
         long couponId = 1L;
-        Coupon coupon = new Coupon();
+        Coupon coupon = mock(Coupon.class);
         ReflectionTestUtils.setField(coupon, "discountRate", 10);
 
         CouponUser couponUser = CouponUser.from(coupon, User.fromAuthUser(authUser));
@@ -68,7 +69,7 @@ class CouponUserServiceTest {
         AuthUser authUser = new AuthUser(1L, "test@email.com", UserRole.USER);
         int amount = 10000;
         long couponId = 1L;
-        Coupon coupon = new Coupon();
+        Coupon coupon = Coupon.from(new CouponCreateRequestDto());
         ReflectionTestUtils.setField(coupon, "discountRate", 10);
 
         CouponUser couponUser = CouponUser.from(coupon, User.fromAuthUser(authUser));
@@ -90,7 +91,7 @@ class CouponUserServiceTest {
         AuthUser authUser = new AuthUser(1L, "test@email.com", UserRole.USER);
         int amount = 10000;
         long couponId = 1L;
-        Coupon coupon = new Coupon();
+        Coupon coupon = mock(Coupon.class);
         ReflectionTestUtils.setField(coupon, "discountRate", 10);
 
         given(couponSubService.getCoupon(couponId)).willReturn(coupon);
@@ -109,8 +110,8 @@ class CouponUserServiceTest {
     @DisplayName("쿠폰 보유 기록 저장")
     void createCouponUser() {
         // given
-        User user = new User();
-        Coupon coupon = new Coupon();
+        User user = User.fromUserId(1L);
+        Coupon coupon = mock(Coupon.class);
 
         // when
         couponUserService.createCouponUser(user, coupon);
