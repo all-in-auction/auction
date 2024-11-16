@@ -1,16 +1,17 @@
 package com.auction.feign.decoder;
 
+import com.auction.common.apipayload.dto.ReasonDto;
 import com.auction.common.apipayload.status.ErrorStatus;
 import com.auction.common.exception.ApiException;
 import com.auction.feign.utils.FeignClientUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Request;
 import feign.Response;
 import feign.RetryableException;
 import feign.codec.ErrorDecoder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
-
-import static com.auction.common.apipayload.status.ErrorStatus.getErrorStatus;
 
 import static java.lang.String.format;
 
@@ -37,7 +38,7 @@ public class ApiErrorDecoder implements ErrorDecoder {
     }
 
     /**
-     * 4XX, 5XX 에러이면서, GET 요청에 대해서만 retry
+     * 5XX 에러이면서, GET 요청에 대해서만 retry
      */
     private boolean isRetry(Response response) {
         if (response.request().httpMethod() != Request.HttpMethod.GET) {
@@ -47,4 +48,13 @@ public class ApiErrorDecoder implements ErrorDecoder {
         return HttpStatusCode.valueOf(response.status()).is5xxServerError();
     }
 
+    private ErrorStatus getErrorStatus(String responseBody) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            ReasonDto reasonDto = objectMapper.readValue(responseBody, ReasonDto.class);
+            return ErrorStatus.getErrorStatus(reasonDto.getMessage());
+        } catch (JsonProcessingException e) {
+            return ErrorStatus._INTERNAL_SERVER_ERROR;
+        }
+    }
 }

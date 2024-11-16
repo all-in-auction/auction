@@ -60,10 +60,6 @@ spring:
     openfeign:
       url: ${POINT_SERVER_URL}/api/internal
 
-  cloud:
-    openfeign:
-      url: ${POINT_SERVER_URL}/api/internal
-
 payment:
   client:
     key: ${PAYMENT_CLIENT_KEY}

@@ -11,11 +11,6 @@ spring:
       okhttp:
         enabled: true
 
-  cloud:
-    openfeign:
-      okhttp:
-        enabled: true
-
 cloud:
   aws:
     s3:
