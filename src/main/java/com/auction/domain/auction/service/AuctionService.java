@@ -207,7 +207,6 @@ public class AuctionService {
                         int price = Objects.requireNonNull(tuple.getScore()).intValue();
                         if (userId != user.getId()) {
                             AuctionHistoryDto auctionHistoryDto = AuctionHistoryDto.of(userId, price);
-                            kafkaTemplate.send(refundTopic, RefundEvent.from(auctionId, auctionHistoryDto));
                         }
                     }
                 });
