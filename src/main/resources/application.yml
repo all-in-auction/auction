@@ -41,4 +41,9 @@ management:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: http://${EUREKA_HOST}:8761/eureka
+
+logging:
+  level:
+    com.zaxxer.hikari.HikariConfig: DEBUG
+    com.zaxxer.hikari: TRACE
