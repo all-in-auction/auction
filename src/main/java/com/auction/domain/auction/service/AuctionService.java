@@ -27,10 +27,6 @@ import com.auction.domain.auction.repository.ItemRepository;
 import com.auction.domain.deposit.service.DepositService;
 import com.auction.domain.notification.enums.NotificationType;
 import com.auction.domain.notification.service.NotificationService;
-import com.auction.domain.point.repository.PointRepository;
-import com.auction.domain.point.service.PointService;
-import com.auction.domain.pointHistory.enums.PaymentType;
-import com.auction.domain.pointHistory.service.PointHistoryService;
 import com.auction.domain.user.entity.User;
 import com.auction.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +36,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,11 +48,10 @@ import java.util.*;
 @RequiredArgsConstructor
 public class AuctionService {
     private final ItemRepository itemRepository;
-    private final PointRepository pointRepository;
     private final AuctionRepository auctionRepository;
 
-    private final PointService pointService;
-    private final PointHistoryService pointHistoryService;
+    //    private final PointService pointService;
+//    private final PointHistoryService pointHistoryService;
     private final DepositService depositService;
     private final UserService userService;
     private final AuctionItemElasticService elasticService;
@@ -65,6 +61,10 @@ public class AuctionService {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final PointServiceGrpc.PointServiceBlockingStub pointServiceStub;
+    private final KafkaTemplate<String, RefundEvent> kafkaTemplate;
+
+    @Value("${kafka.topic.refund}")
+    private String refundTopic;
 
     @Value("${notification.related-url.auction}")
     private String relatedAuctionUrl;
@@ -163,7 +163,7 @@ public class AuctionService {
 
         // TODO : gRPC 변환
         int pointAmount = grpcUserPoint(user.getId());
-
+      
         if (pointAmount < bidPrice) {
             throw new ApiException(ErrorStatus._INVALID_NOT_ENOUGH_POINT);
         }
@@ -211,7 +211,7 @@ public class AuctionService {
                         int price = Objects.requireNonNull(tuple.getScore()).intValue();
                         if (userId != user.getId()) {
                             AuctionHistoryDto auctionHistoryDto = AuctionHistoryDto.of(userId, price);
-                            auctionPublisher.refundPublisher(RefundEvent.from(auctionId, auctionHistoryDto));
+                            kafkaTemplate.send(refundTopic, RefundEvent.from(auctionId, auctionHistoryDto));
                         }
                     }
                 });
@@ -307,8 +307,8 @@ public class AuctionService {
         } else {
             // 경매 낙찰
             // 판매자 포인트 증가
-            pointService.increasePoint(auction.getSeller().getId(), auction.getMaxPrice());
-            pointHistoryService.createPointHistory(auction.getSeller(), auction.getMaxPrice(), PaymentType.RECEIVE);
+//            pointService.increasePoint(auction.getSeller().getId(), auction.getMaxPrice());
+//            pointHistoryService.createPointHistory(auction.getSeller(), auction.getMaxPrice(), PaymentType.RECEIVE);
 
             // 구매자 경매 이력 수정
             String buyerId = (String) result.iterator().next();
