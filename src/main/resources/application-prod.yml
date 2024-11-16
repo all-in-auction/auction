@@ -65,6 +65,7 @@ payment:
 server:
   error:
     include-message: always
+  port: 8080
 
 notification:
   related-url:

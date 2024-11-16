@@ -63,6 +63,7 @@ payment:
 server:
   error:
     include-message: always
+  port: 0
 
 notification:
   related-url:
