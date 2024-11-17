@@ -1,5 +1,7 @@
 package com.auction.domain.auction.service;
 
+import com.auction.Point;
+import com.auction.PointServiceGrpc;
 import com.auction.common.annotation.DistributedLock;
 import com.auction.common.apipayload.status.ErrorStatus;
 import com.auction.common.entity.AuthUser;
@@ -25,12 +27,9 @@ import com.auction.domain.auction.repository.ItemRepository;
 import com.auction.domain.deposit.service.DepositService;
 import com.auction.domain.notification.enums.NotificationType;
 import com.auction.domain.notification.service.NotificationService;
-import com.auction.domain.point.repository.PointRepository;
-import com.auction.domain.point.service.PointService;
-import com.auction.domain.pointHistory.enums.PaymentType;
-import com.auction.domain.pointHistory.service.PointHistoryService;
 import com.auction.domain.user.entity.User;
 import com.auction.domain.user.service.UserService;
+import jakarta.ws.rs.HEAD;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,6 +37,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,19 +49,22 @@ import java.util.*;
 @RequiredArgsConstructor
 public class AuctionService {
     private final ItemRepository itemRepository;
-    private final PointRepository pointRepository;
     private final AuctionRepository auctionRepository;
 
-    private final PointService pointService;
-    private final PointHistoryService pointHistoryService;
     private final DepositService depositService;
     private final UserService userService;
     private final AuctionItemElasticService elasticService;
+    private final AuctionBidGrpcService auctionBidGrpcService;
 
     private final AuctionPublisher auctionPublisher;
     private final NotificationService notificationService;
 
     private final RedisTemplate<String, Object> redisTemplate;
+    private final PointServiceGrpc.PointServiceBlockingStub pointServiceStub;
+    private final KafkaTemplate<String, RefundEvent> kafkaTemplate;
+
+    @Value("${kafka.topic.refund}")
+    private String refundTopic;
 
     @Value("${notification.related-url.auction}")
     private String relatedAuctionUrl;
@@ -158,10 +161,13 @@ public class AuctionService {
         int bidPrice = (bidCreateRequestDto.getPrice() / 1000) * 1000;
         validBidPrice(bidPrice, auction, auctionHistoryKey);
 
-        int pointAmount = pointRepository.findPointByUserId(user.getId());
+        // TODO : gRPC 변환
+        int pointAmount = auctionBidGrpcService.grpcUserPoint(user.getId());
+
         if (pointAmount < bidPrice) {
             throw new ApiException(ErrorStatus._INVALID_NOT_ENOUGH_POINT);
         }
+
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -176,12 +182,20 @@ public class AuctionService {
                 (deposit) -> {
                     int prevDeposit = Integer.parseInt(deposit.toString());
                     int gap = bidPrice - prevDeposit;
-                    pointService.decreasePoint(user.getId(), gap);
-                    pointHistoryService.createPointHistory(user, gap, PaymentType.SPEND);
+
+                    // TODO : gRPC 변환
+                    auctionBidGrpcService.grpcDecreasePoint(user.getId(), gap);
+                    // TODO : gRPC 변환
+                    auctionBidGrpcService.createPointHistory(user.getId(), gap, Point.PaymentType.SPEND);
+//                    pointHistoryService.createPointHistory(user, gap, PaymentType.SPEND);
                 },
                 () -> {
-                    pointService.decreasePoint(user.getId(), bidPrice);
-                    pointHistoryService.createPointHistory(user, bidPrice, PaymentType.SPEND);
+                    // TODO : gRPC 변환
+                    auctionBidGrpcService.grpcDecreasePoint(user.getId(), bidPrice);
+//                    pointService.decreasePoint(user.getId(), bidPrice);
+                    // TODO : gRPC 변환
+                    auctionBidGrpcService.createPointHistory(user.getId(), bidPrice, Point.PaymentType.SPEND);
+//                    pointHistoryService.createPointHistory(user, bidPrice, PaymentType.SPEND);
                 }
         );
         depositService.placeDeposit(user.getId(), auctionId, bidPrice);
@@ -197,7 +211,7 @@ public class AuctionService {
                         int price = Objects.requireNonNull(tuple.getScore()).intValue();
                         if (userId != user.getId()) {
                             AuctionHistoryDto auctionHistoryDto = AuctionHistoryDto.of(userId, price);
-                            auctionPublisher.refundPublisher(RefundEvent.from(auctionId, auctionHistoryDto));
+                            kafkaTemplate.send(refundTopic, RefundEvent.from(auctionId, auctionHistoryDto));
                         }
                     }
                 });
@@ -212,6 +226,7 @@ public class AuctionService {
 
         return BidCreateResponseDto.of(user.getId(), auction);
     }
+
 
     @Transactional
     public void closeAuction(AuctionEvent auctionEvent) {
@@ -230,6 +245,10 @@ public class AuctionService {
             return;
         }
 
+        // redis key 삭제
+        redisTemplate.delete(auctionHistoryKey);
+        redisTemplate.opsForZSet().remove(AUCTION_RANKING_PREFIX, String.valueOf(auctionId));
+
         Set<Object> result = redisTemplate.opsForZSet().reverseRange(auctionHistoryKey, 0, 0);
         if (result == null || result.isEmpty()) {
             // 경매 유찰 알림
@@ -238,8 +257,10 @@ public class AuctionService {
         } else {
             // 경매 낙찰
             // 판매자 포인트 증가
-            pointService.increasePoint(auction.getSeller().getId(), auction.getMaxPrice());
-            pointHistoryService.createPointHistory(auction.getSeller(), auction.getMaxPrice(), PaymentType.RECEIVE);
+            auctionBidGrpcService.increasePoint(auction.getSeller().getId(), auction.getMaxPrice());
+            auctionBidGrpcService.createPointHistory(auction.getSeller().getId(), auction.getMaxPrice(), Point.PaymentType.RECEIVE);
+//            pointService.increasePoint(auction.getSeller().getId(), auction.getMaxPrice());
+//            pointHistoryService.createPointHistory(auction.getSeller(), auction.getMaxPrice(), PaymentType.RECEIVE);
 
             // 구매자 경매 이력 수정
             String buyerId = (String) result.iterator().next();
@@ -257,9 +278,6 @@ public class AuctionService {
                     "입찰한 " + auction.getItem().getName() + "이(가) 낙찰되었습니다!",
                     relatedAuctionUrl + auctionId);
         }
-        // redis key 삭제
-        redisTemplate.delete(auctionHistoryKey);
-        redisTemplate.opsForZSet().remove(AUCTION_RANKING_PREFIX, String.valueOf(auctionId));
     }
 
     @Transactional(readOnly = true)

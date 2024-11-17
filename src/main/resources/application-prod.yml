@@ -53,6 +53,12 @@ spring:
 
   elasticsearch:
     uris: ${ELASTICSEARCH_URIS}
+    username: ${ELASTICSEARCH_USERNAME}
+    password: ${ELASTICSEARCH_PASSWORD}
+
+  cloud:
+    openfeign:
+      url: ${POINT_SERVER_URL}/api/internal
 
 payment:
   client:
@@ -63,20 +69,26 @@ payment:
 server:
   error:
     include-message: always
+  port: 8080
 
 notification:
   related-url:
     auction: auctionlb-1965560899.ap-northeast-2.elb.amazonaws.com:80/api/v1/auctions/
     review: auctionlb-1965560899.ap-northeast-2.elb.amazonaws.com:80/api/v2/reviews/
 
-
 kafka:
   topic:
+    refund: "refund-point-topic"
     coupon: "coupon-claim-topic"
   consumer:
-    group-id: "coupon-group"
+    coupon-group:
+      group-id: "coupon-group"
+    refund-group:
+      group-id: "refund-group"
   producer:
-    bootstrap-servers: ${KAFKA_HOST}
+    bootstrap-servers: ${KAFKA_HOSTS}
+    properties:
+      num.partitions: 3
 
 ---
 spring:

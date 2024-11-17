@@ -44,14 +44,15 @@ public class WebSecurityConfig {
                                 "/error",
                                 "/style.css",
                                 "/payment/**",
-                                "/api/v1/points/buy/confirm",
+                                "/api/*/points/buy/confirm",
                                 "/actuator/prometheus",
-                                "/api/v2/auctions/search",
-                                "/api/v2/auctions/elasticsearch",
+                                "/api/*/auctions/search",
+                                "/api/*/auctions/elasticsearch",
                                 "/actuator/health",
-                                "/health"
+                                "/health",
+                                "/api/internal/**"
                         ).permitAll()
-                        .requestMatchers("/api/v2/admin/**").hasAuthority(UserRole.Authority.ADMIN)
+                        .requestMatchers("/api/*/admin/**").hasAuthority(UserRole.Authority.ADMIN)
                         .anyRequest().authenticated()
                 )
                 .build();

@@ -37,26 +37,6 @@ public class RabbitMqConfig {
     }
 
     @Bean
-    TopicExchange refundExchange() {
-        return new TopicExchange("exchange.refund");
-    }
-
-    @Bean
-    Queue refundQueue() {
-        Map<String, Object> arguments = new HashMap<>();
-        arguments.put("x-queue-mode", "lazy");
-        return new Queue("refund.queue", false, false, false, arguments);
-    }
-
-    @Bean
-    Binding refundBinding(TopicExchange refundExchange, Queue refundQueue) {
-        return BindingBuilder
-                .bind(refundQueue)
-                .to(refundExchange)
-                .with("refund.*");
-    }
-
-    @Bean
     MessageConverter messageConverter() {
         return new Jackson2JsonMessageConverter();
     }

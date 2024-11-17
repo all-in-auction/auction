@@ -6,13 +6,17 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
+import java.util.Arrays;
+
 @Getter
 @AllArgsConstructor
 public enum ErrorStatus implements BaseCode {
 
     // common
-    _INVALID_REQUEST(HttpStatus.NOT_FOUND, "404", "잘못된 요청입니다."),
-    _PERMISSION_DENIED(HttpStatus.BAD_REQUEST, "404", "권한이 없습니다."),
+    _INVALID_REQUEST(HttpStatus.BAD_REQUEST, "400", "잘못된 요청입니다."),
+    _PERMISSION_DENIED(HttpStatus.FORBIDDEN, "403", "권한이 없습니다."),
+    _TIMEOUT(HttpStatus.REQUEST_TIMEOUT, "408", "잠시 후 다시 시도해주세요."),
+    _INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "500", "요청에 실패하였습니다."),
 
     //Auth
     _NOT_AUTHENTICATIONPRINCIPAL_USER(HttpStatus.UNAUTHORIZED, "401", "인증되지 않은 유저입니다."),
@@ -55,6 +59,12 @@ public enum ErrorStatus implements BaseCode {
     private String statusCode;
     private String message;
 
+    public static ErrorStatus getErrorStatus(String findMessage) {
+        return Arrays.stream(values())
+                .filter(errorStatus -> errorStatus.message.equals(findMessage))
+                .findAny()
+                .orElse(ErrorStatus._INTERNAL_SERVER_ERROR);
+    }
 
     @Override
     public ReasonDto getReasonHttpStatus() {

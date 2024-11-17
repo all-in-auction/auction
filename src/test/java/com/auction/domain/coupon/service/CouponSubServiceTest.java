@@ -2,6 +2,7 @@ package com.auction.domain.coupon.service;
 
 import com.auction.common.apipayload.status.ErrorStatus;
 import com.auction.common.exception.ApiException;
+import com.auction.domain.coupon.dto.request.CouponCreateRequestDto;
 import com.auction.domain.coupon.entity.Coupon;
 import com.auction.domain.coupon.repository.CouponRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -17,7 +18,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,7 +34,7 @@ class CouponSubServiceTest {
     void getCouponSuccess() {
         // given
         long couponId = 1L;
-        Coupon coupon = new Coupon();
+        Coupon coupon = Coupon.from(new CouponCreateRequestDto());
         ReflectionTestUtils.setField(coupon, "id", 1L);
         ReflectionTestUtils.setField(coupon, "expireAt", LocalDate.now());
         when(couponRepository.findById(1L)).thenReturn(Optional.of(coupon));
@@ -66,7 +67,7 @@ class CouponSubServiceTest {
     void createExpiredCoupon() {
         // given
         long couponId = 1L;
-        Coupon coupon = new Coupon();
+        Coupon coupon = Coupon.from(new CouponCreateRequestDto());
         ReflectionTestUtils.setField(coupon, "id", 1L);
         ReflectionTestUtils.setField(coupon, "expireAt", LocalDate.now().minusDays(1));
         when(couponRepository.findById(1L)).thenReturn(Optional.of(coupon));
