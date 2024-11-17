@@ -18,7 +18,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -31,7 +30,7 @@ import java.util.Optional;
 import static com.auction.domain.coupon.service.CouponService.COUPON_PREFIX;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -91,7 +90,7 @@ class CouponServiceTest {
         // given
         AuthUser authUser = new AuthUser(1L, "test@email.com", UserRole.USER);
         Long couponId = 1L;
-        Coupon coupon = new Coupon();
+        Coupon coupon = mock(Coupon.class);
         ReflectionTestUtils.setField(coupon, "id", 1L);
         ReflectionTestUtils.setField(coupon, "amount", 100);
         ReflectionTestUtils.setField(coupon, "name", "test coupon");
@@ -142,7 +141,7 @@ class CouponServiceTest {
         // given
         AuthUser authUser = new AuthUser(1L, "test@email.com", UserRole.USER);
         Long couponId = 1L;
-        Coupon coupon = new Coupon();
+        Coupon coupon = mock(Coupon.class);
         ReflectionTestUtils.setField(coupon, "id", 1L);
         ReflectionTestUtils.setField(coupon, "amount", 100);
         ReflectionTestUtils.setField(coupon, "name", "test coupon");
@@ -166,7 +165,7 @@ class CouponServiceTest {
         // given
         AuthUser authUser = new AuthUser(1L, "test@email.com", UserRole.USER);
         Long couponId = 1L;
-        Coupon coupon = new Coupon();
+        Coupon coupon = mock(Coupon.class);
         ReflectionTestUtils.setField(coupon, "id", 1L);
         ReflectionTestUtils.setField(coupon, "amount", 100);
         ReflectionTestUtils.setField(coupon, "name", "test coupon");
@@ -189,7 +188,7 @@ class CouponServiceTest {
         // given
         AuthUser authUser = new AuthUser(1L, "test@email.com", UserRole.USER);
         Long couponId = 1L;
-        Coupon coupon = new Coupon();
+        Coupon coupon = mock(Coupon.class);
         ReflectionTestUtils.setField(coupon, "id", 1L);
         ReflectionTestUtils.setField(coupon, "amount", 100);
         ReflectionTestUtils.setField(coupon, "name", "test coupon");
@@ -212,7 +211,7 @@ class CouponServiceTest {
         // given
         AuthUser authUser = new AuthUser(1L, "test@email.com", UserRole.USER);
         Long couponId = 1L;
-        Coupon coupon = new Coupon();
+        Coupon coupon = mock(Coupon.class);
         ReflectionTestUtils.setField(coupon, "id", 1L);
         ReflectionTestUtils.setField(coupon, "amount", 100);
         ReflectionTestUtils.setField(coupon, "name", "test coupon");

@@ -37,6 +37,7 @@ public class CouponUser extends TimeStamped {
     private Long pointHistoryId;
 
     @NotNull
+    @Column(name = "is_available")
     private boolean isAvailable = true;
 
     public void useCoupon(long pointHistoryId) {

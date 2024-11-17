@@ -3,6 +3,13 @@ spring:
     active: dev
   config:
     import: optional:file:.env[.properties]
+  application:
+    name: auction-service
+
+  cloud:
+    openfeign:
+      okhttp:
+        enabled: true
 
 cloud:
   aws:
@@ -32,7 +39,26 @@ management:
   security:
     enabled: false
 
+  health:
+    eureka:
+      enabled: false
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${EUREKA_HOST}:8761/eureka
+
+  instance:
+    instance-id: ${spring.application.name}:${ECS_CONTAINER_METADATA_URI_V4}
+    prefer-ip-address: true
+
+
 logging:
   level:
     com.zaxxer.hikari.HikariConfig: DEBUG
     com.zaxxer.hikari: TRACE
+    com.auction.feign.service.PointService: DEBUG
+
+server:
+  http2:
+    enabled: true

@@ -34,7 +34,6 @@ spring:
   elasticsearch:
     uris: ${ELASTICSEARCH_URIS}
 
-
   data:
     redis:
       host: ${REDIS_HOST}
@@ -54,6 +53,10 @@ spring:
         format_sql: true
         use_sql_comments: true
 
+  cloud:
+    openfeign:
+      url: localhost:8081/api/internal
+
 payment:
   client:
     key: ${PAYMENT_CLIENT_KEY}
@@ -63,6 +66,7 @@ payment:
 server:
   error:
     include-message: always
+  port: 0
 
 notification:
   related-url:

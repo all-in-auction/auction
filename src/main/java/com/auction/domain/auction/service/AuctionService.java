@@ -29,6 +29,7 @@ import com.auction.domain.notification.enums.NotificationType;
 import com.auction.domain.notification.service.NotificationService;
 import com.auction.domain.user.entity.User;
 import com.auction.domain.user.service.UserService;
+import jakarta.ws.rs.HEAD;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -59,6 +60,7 @@ public class AuctionService {
     private final NotificationService notificationService;
 
     private final RedisTemplate<String, Object> redisTemplate;
+    private final PointServiceGrpc.PointServiceBlockingStub pointServiceStub;
     private final KafkaTemplate<String, RefundEvent> kafkaTemplate;
 
     @Value("${kafka.topic.refund}")
@@ -161,7 +163,7 @@ public class AuctionService {
 
         // TODO : gRPC 변환
         int pointAmount = auctionBidGrpcService.grpcUserPoint(user.getId());
-      
+
         if (pointAmount < bidPrice) {
             throw new ApiException(ErrorStatus._INVALID_NOT_ENOUGH_POINT);
         }
@@ -243,6 +245,10 @@ public class AuctionService {
             return;
         }
 
+        // redis key 삭제
+        redisTemplate.delete(auctionHistoryKey);
+        redisTemplate.opsForZSet().remove(AUCTION_RANKING_PREFIX, String.valueOf(auctionId));
+
         Set<Object> result = redisTemplate.opsForZSet().reverseRange(auctionHistoryKey, 0, 0);
         if (result == null || result.isEmpty()) {
             // 경매 유찰 알림
@@ -272,9 +278,6 @@ public class AuctionService {
                     "입찰한 " + auction.getItem().getName() + "이(가) 낙찰되었습니다!",
                     relatedAuctionUrl + auctionId);
         }
-        // redis key 삭제
-        redisTemplate.delete(auctionHistoryKey);
-        redisTemplate.opsForZSet().remove(AUCTION_RANKING_PREFIX, String.valueOf(auctionId));
     }
 
     @Transactional(readOnly = true)

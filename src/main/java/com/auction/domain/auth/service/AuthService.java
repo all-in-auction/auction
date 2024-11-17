@@ -12,9 +12,9 @@ import com.auction.domain.auth.dto.request.SignupRequestDto;
 import com.auction.domain.auth.dto.response.LoginResponseDto;
 import com.auction.domain.auth.dto.response.SignupResponseDto;
 import com.auction.domain.notification.service.NotificationService;
-//import com.auction.domain.point.service.PointService;
 import com.auction.domain.user.entity.User;
 import com.auction.domain.user.repository.UserRepository;
+import com.auction.feign.service.PointService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -29,7 +29,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
-//    private final PointService pointService;
+    private final PointService pointService;
     private final NotificationService notificationService;
     private final PointServiceGrpc.PointServiceBlockingStub pointServiceStub; // gRPC Stub
 
@@ -55,7 +55,10 @@ public class AuthService {
             e.printStackTrace();
         }
 
-        // 응답 DTO 생성 및 반환
+        // TODO(auth) : GRPC Vs. feign?
+        // 유저 포인트 생성
+//        pointService.createPoint(user.getId());
+
         return SignupResponseDto.of(user);
     }
 
