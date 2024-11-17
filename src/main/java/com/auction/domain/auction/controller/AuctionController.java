@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import static com.auction.common.constants.Const.USER_ID;
+
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
@@ -88,18 +90,18 @@ public class AuctionController {
 
     /**
      * 입찰 등록
-     * @param authUser
+     * @param userId
      * @param auctionId             경매 식별자
      * @param bidCreateRequestDto
      * @return
      */
     @PostMapping("/v4/auctions/{auctionId}/bid")
     public ApiResponse<BidCreateResponseDto> createBid(
-            @AuthenticationPrincipal AuthUser authUser,
+            @RequestHeader(USER_ID) long userId,
             @PathVariable("auctionId") Long auctionId,
             @Valid @RequestBody BidCreateRequestDto bidCreateRequestDto
     ) {
-        return ApiResponse.ok(auctionService.createBid(authUser, auctionId, bidCreateRequestDto));
+        return ApiResponse.ok(auctionService.createBid(userId, auctionId, bidCreateRequestDto));
     }
 
     /**
