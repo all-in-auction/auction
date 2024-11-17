@@ -30,6 +30,7 @@ public class EcsConfig {
         String ip = getPrivateIp(taskArn);
         config.setIpAddress(ip);
         config.setInstanceId("points-service:"+ip);
+        config.setNonSecurePort(8080);
 
         return config;
     }
