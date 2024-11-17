@@ -18,8 +18,6 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class KafkaAuctionConsumer {
 
-//    private final PointService pointService;
-//    private final PointHistoryService pointHistoryService;
     private final DepositService depositService;
     private final PointServiceGrpc.PointServiceBlockingStub pointServiceStub;
     private final AuthService authService;
