@@ -77,20 +77,22 @@ public class AuctionService {
                 .orElseThrow(() -> new ApiException(ErrorStatus._NOT_FOUND_AUCTION));
     }
 
-    private Auction getAuctionWithUser(AuthUser authUser, Long auctionId) {
-        return auctionRepository.findByIdAndSellerId(auctionId, authUser.getId()).orElseThrow(
+    private Auction getAuctionWithUser(User user, Long auctionId) {
+        return auctionRepository.findByIdAndSellerId(auctionId, user.getId()).orElseThrow(
                 () -> new ApiException(ErrorStatus._NOT_FOUND_AUCTION_ITEM)
         );
     }
 
     @Transactional
-    public AuctionCreateResponseDto createAuction(AuthUser authUser, AuctionCreateRequestDto requestDto) {
+    public AuctionCreateResponseDto createAuction(Long userId, AuctionCreateRequestDto requestDto) {
         Item item = Item.of(requestDto.getItem().getName(),
                 requestDto.getItem().getDescription(),
                 ItemCategory.of(requestDto.getItem().getCategory()));
         Item savedItem = itemRepository.save(item);
         elasticService.saveToElastic(ItemDocument.from(savedItem));
-        Auction auction = Auction.of(savedItem, User.fromAuthUser(authUser), requestDto.getMinPrice(), requestDto.isAutoExtension(), requestDto.getExpireAfter());
+
+        User user = userService.getUser(userId);
+        Auction auction = Auction.of(savedItem, user, requestDto.getMinPrice(), requestDto.isAutoExtension(), requestDto.getExpireAfter());
         Auction savedAuction = auctionRepository.save(auction);
 
         auctionPublisher.auctionPublisher(
@@ -114,8 +116,9 @@ public class AuctionService {
     }
 
     @Transactional
-    public AuctionResponseDto updateAuctionItem(AuthUser authUser, Long auctionId, AuctionItemChangeRequestDto requestDto) {
-        Auction auction = getAuctionWithUser(authUser, auctionId);
+    public AuctionResponseDto updateAuctionItem(Long userId, Long auctionId, AuctionItemChangeRequestDto requestDto) {
+        User user = userService.getUser(userId);
+        Auction auction = getAuctionWithUser(user, auctionId);
         Item item = auction.getItem();
 
         if (requestDto.getName() != null) {
@@ -135,16 +138,17 @@ public class AuctionService {
     }
 
     @Transactional
-    public String deleteAuctionItem(AuthUser authUser, Long auctionId) {
-        Auction auction = getAuctionWithUser(authUser, auctionId);
+    public String deleteAuctionItem(Long userId, Long auctionId) {
+        User user = userService.getUser(userId);
+        Auction auction = getAuctionWithUser(user, auctionId);
         elasticService.deleteFromElastic(ItemDocument.from(auction.getItem()));
         auctionRepository.delete(auction);
         return "물품이 삭제되었습니다.";
     }
 
     @DistributedLock(key = "T(java.lang.String).format('Auction%d', #auctionId)")
-    public BidCreateResponseDto createBid(AuthUser authUser, long auctionId, BidCreateRequestDto bidCreateRequestDto) {
-        User user = User.fromAuthUser(authUser);
+    public BidCreateResponseDto createBid(Long userId, Long auctionId, BidCreateRequestDto bidCreateRequestDto) {
+        User user = userService.getUser(userId);
         Auction auction = getAuctionById(auctionId);
 
         if (Objects.equals(auction.getSeller().getId(), user.getId())) {
@@ -185,19 +189,12 @@ public class AuctionService {
                     int prevDeposit = Integer.parseInt(deposit.toString());
                     int gap = bidPrice - prevDeposit;
 
-                    // TODO : gRPC 변환
                     auctionBidGrpcService.grpcDecreasePoint(user.getId(), gap);
-                    // TODO : gRPC 변환
                     auctionBidGrpcService.createPointHistory(user.getId(), gap, Point.PaymentType.SPEND);
-//                    pointHistoryService.createPointHistory(user, gap, PaymentType.SPEND);
                 },
                 () -> {
-                    // TODO : gRPC 변환
                     auctionBidGrpcService.grpcDecreasePoint(user.getId(), bidPrice);
-//                    pointService.decreasePoint(user.getId(), bidPrice);
-                    // TODO : gRPC 변환
                     auctionBidGrpcService.createPointHistory(user.getId(), bidPrice, Point.PaymentType.SPEND);
-//                    pointHistoryService.createPointHistory(user, bidPrice, PaymentType.SPEND);
                 }
         );
         depositService.placeDeposit(user.getId(), auctionId, bidPrice);
@@ -209,23 +206,22 @@ public class AuctionService {
                 .filter(tuples -> !tuples.isEmpty())
                 .ifPresent(tuples -> {
                     for (ZSetOperations.TypedTuple<Object> tuple : tuples) {
-                        long userId = Long.parseLong(String.valueOf(tuple.getValue()));
+                        long refundUserId = Long.parseLong(String.valueOf(tuple.getValue()));
                         int price = Objects.requireNonNull(tuple.getScore()).intValue();
-                        if (userId != user.getId()) {
-                            AuctionHistoryDto auctionHistoryDto = AuctionHistoryDto.of(userId, price);
-                            kafkaTemplate.send(refundTopic, RefundEvent.from(auctionId, auctionHistoryDto));
+                        if (refundUserId != user.getId()) {
+                            depositService.deleteDeposit(refundUserId, auctionId);
+                            auctionBidGrpcService.increasePoint(refundUserId, price);
+                            auctionBidGrpcService.createPointHistory(refundUserId,price,Point.PaymentType.REFUND);
                         }
                     }
                 });
 
         // redis zset 에 입찰 기록 저장
         redisTemplate.opsForZSet().add(auctionHistoryKey, user.getId().toString(), bidPrice);
-
         redisTemplate.opsForZSet().incrementScore(AUCTION_RANKING_PREFIX, String.valueOf(auctionId), 1);
 
         return BidCreateResponseDto.of(user.getId(), auction);
     }
-
 
     @Transactional
     public void closeAuction(AuctionEvent auctionEvent) {

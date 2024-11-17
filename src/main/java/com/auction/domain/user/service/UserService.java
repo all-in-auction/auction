@@ -31,8 +31,8 @@ public class UserService {
 
     // 유저 정보 수정
     @Transactional
-    public UserResponseDto updateUser(AuthUser authUser, UserUpdateRequestDto userUpdateRequest) {
-        User user = getUser(authUser.getId());
+    public UserResponseDto updateUser(Long userId, UserUpdateRequestDto userUpdateRequest) {
+        User user = getUser(userId);
         authService.checkPassword(userUpdateRequest.getOldPassword(), user.getPassword());
 
         if (userUpdateRequest.getNewPassword() != null) {
@@ -54,8 +54,8 @@ public class UserService {
     }
 
     // 판매 내역 리스트 반환
-    public List<ItemResponseDto> getSales(AuthUser authUser) {
-        User user = User.fromAuthUser(authUser);
+    public List<ItemResponseDto> getSales(Long userId) {
+        User user = getUser(userId);
 
         List<Long> itemIdList = auctionRepository.findItemIdListBySeller(user);
         List<Item> itemList = itemRepository.findByIdList(itemIdList);
@@ -66,8 +66,8 @@ public class UserService {
     }
 
     // 옥션에서 buyerId 가 같은 값 -> 본인 구매 내역
-    public List<ItemResponseDto> getPurchases(AuthUser authUser) {
-        User user = User.fromAuthUser(authUser);
+    public List<ItemResponseDto> getPurchases(Long userId) {
+        User user = getUser(userId);
 
         return auctionRepository.findByBuyer(user).stream()
                 .map(auction -> ItemResponseDto.from(auction.getItem()))
