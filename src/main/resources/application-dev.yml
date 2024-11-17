@@ -34,7 +34,6 @@ spring:
   elasticsearch:
     uris: ${ELASTICSEARCH_URIS}
 
-
   data:
     redis:
       host: ${REDIS_HOST}
@@ -46,13 +45,17 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
         show_sql: true
         format_sql: true
         use_sql_comments: true
+
+  cloud:
+    openfeign:
+      url: localhost:8081/api/internal
 
 payment:
   client:
@@ -63,7 +66,8 @@ payment:
 server:
   error:
     include-message: always
-  port: 0
+#  port: 0
+  port: 8080
 
 notification:
   related-url:

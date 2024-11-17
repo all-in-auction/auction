@@ -1,4 +1,4 @@
-package com.auction.domain.pointHistory.enums;
+package com.auction.feign.enums;
 
 import lombok.Getter;
 

@@ -6,6 +6,11 @@ spring:
   application:
     name: auction-service
 
+  cloud:
+    openfeign:
+      okhttp:
+        enabled: true
+
 cloud:
   aws:
     s3:
@@ -48,3 +53,8 @@ logging:
   level:
     com.zaxxer.hikari.HikariConfig: DEBUG
     com.zaxxer.hikari: TRACE
+    com.auction.feign.service.PointService: DEBUG
+
+server:
+  http2:
+    enabled: true

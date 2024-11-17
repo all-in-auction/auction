@@ -13,7 +13,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.LocalDateTime;
@@ -59,8 +58,7 @@ class NotificationServiceTest {
     @Test
     public void sendNotificationTest() {
         // given
-        User receiver = new User();
-        ReflectionTestUtils.setField(receiver, "id", 1L);
+        User receiver = User.fromUserId(1L);
         String content = "content";
         String relatedUrl = "relatedUrl";
         NotificationType type = NotificationType.AUCTION;

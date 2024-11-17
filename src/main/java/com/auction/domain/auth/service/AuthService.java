@@ -1,5 +1,7 @@
 package com.auction.domain.auth.service;
 
+import com.auction.Point;
+import com.auction.PointServiceGrpc;
 import com.auction.common.apipayload.status.ErrorStatus;
 import com.auction.common.entity.AuthUser;
 import com.auction.common.exception.ApiException;
@@ -10,10 +12,11 @@ import com.auction.domain.auth.dto.request.SignupRequestDto;
 import com.auction.domain.auth.dto.response.LoginResponseDto;
 import com.auction.domain.auth.dto.response.SignupResponseDto;
 import com.auction.domain.notification.service.NotificationService;
-import com.auction.domain.point.service.PointService;
 import com.auction.domain.user.entity.User;
 import com.auction.domain.user.repository.UserRepository;
+import com.auction.feign.service.PointService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,19 +24,24 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class AuthService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final PointService pointService;
     private final NotificationService notificationService;
+    private final PointServiceGrpc.PointServiceBlockingStub pointServiceStub; // gRPC Stub
+
 
     @Transactional
     public SignupResponseDto createUser(SignupRequestDto signupRequest) {
         String encodedPassword = passwordEncoder.encode(signupRequest.getPassword());
         User user = userRepository.save(new User(encodedPassword, signupRequest));
 
-        pointService.createPoint(user);
+        // 유저 포인트 생성
+        pointService.createPoint(user.getId());
+
         return SignupResponseDto.of(user);
     }
 
