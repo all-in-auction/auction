@@ -12,7 +12,7 @@ import java.net.UnknownHostException;
 
 @Configuration
 @Slf4j
-@Profile("dev")
+@Profile("prod")
 public class EcsConfig {
 
     @Bean
