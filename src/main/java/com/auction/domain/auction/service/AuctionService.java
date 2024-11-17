@@ -168,7 +168,6 @@ public class AuctionService {
             throw new ApiException(ErrorStatus._INVALID_NOT_ENOUGH_POINT);
         }
 
-
         LocalDateTime now = LocalDateTime.now();
 
         boolean isAutoExtensionNow = auction.getExpireAt().minusMinutes(5L).isBefore(now);
@@ -176,6 +175,9 @@ public class AuctionService {
         if (auction.isAutoExtension() && isAutoExtensionNow) {
             auction.changeExpireAt(auction.getExpireAt().plusMinutes(10L));
         }
+
+        auction.changeMaxPrice(bidPrice);
+        auctionRepository.save(auction);
 
         // 포인트 차감, 보증금 예치
         depositService.getDeposit(user.getId(), auctionId).ifPresentOrElse(
@@ -218,9 +220,6 @@ public class AuctionService {
 
         // redis zset 에 입찰 기록 저장
         redisTemplate.opsForZSet().add(auctionHistoryKey, user.getId().toString(), bidPrice);
-
-        auction.changeMaxPrice(bidPrice);
-        auctionRepository.save(auction);
 
         redisTemplate.opsForZSet().incrementScore(AUCTION_RANKING_PREFIX, String.valueOf(auctionId), 1);
 
