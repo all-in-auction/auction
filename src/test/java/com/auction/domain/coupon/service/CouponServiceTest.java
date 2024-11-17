@@ -101,7 +101,7 @@ class CouponServiceTest {
         ArgumentCaptor<CouponClaimMessage> messageCaptor = ArgumentCaptor.forClass(CouponClaimMessage.class);
 
         // when
-        CouponClaimResponseDto responseDto = couponService.claimCouponV3(authUser, couponId);
+        CouponClaimResponseDto responseDto = couponService.claimCouponV3(authUser.getId(), couponId);
 
         // then
         verify(couponRepository, times(1)).findById(couponId);
@@ -127,7 +127,7 @@ class CouponServiceTest {
         when(couponRepository.findById(couponId)).thenReturn(Optional.empty());
 
         // when
-        Throwable throwable = catchThrowable(() -> couponService.claimCouponV3(authUser, couponId));
+        Throwable throwable = catchThrowable(() -> couponService.claimCouponV3(authUser.getId(), couponId));
 
         // then
         assertThat(throwable)
@@ -151,7 +151,7 @@ class CouponServiceTest {
                 .when(redisTemplate).execute(eq(redisScript), anyList());
 
         // when
-        Throwable throwable = catchThrowable(() -> couponService.claimCouponV3(authUser, couponId));
+        Throwable throwable = catchThrowable(() -> couponService.claimCouponV3(authUser.getId(), couponId));
 
         // then
         assertThat(throwable)
@@ -174,7 +174,7 @@ class CouponServiceTest {
         when(redisTemplate.execute(eq(redisScript), anyList())).thenReturn(null);
 
         // when
-        Throwable throwable = catchThrowable(() -> couponService.claimCouponV3(authUser, couponId));
+        Throwable throwable = catchThrowable(() -> couponService.claimCouponV3(authUser.getId(), couponId));
 
         // then
         assertThat(throwable)
@@ -197,7 +197,7 @@ class CouponServiceTest {
         when(redisTemplate.execute(eq(redisScript), anyList())).thenReturn(-100L);
 
         // when
-        Throwable throwable = catchThrowable(() -> couponService.claimCouponV3(authUser, couponId));
+        Throwable throwable = catchThrowable(() -> couponService.claimCouponV3(authUser.getId(), couponId));
 
         // then
         assertThat(throwable)
@@ -220,7 +220,7 @@ class CouponServiceTest {
         when(redisTemplate.execute(eq(redisScript), anyList())).thenReturn(-200L);
 
         // when
-        Throwable throwable = catchThrowable(() -> couponService.claimCouponV3(authUser, couponId));
+        Throwable throwable = catchThrowable(() -> couponService.claimCouponV3(authUser.getId(), couponId));
 
         // then
         assertThat(throwable)

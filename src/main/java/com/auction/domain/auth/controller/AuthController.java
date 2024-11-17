@@ -1,7 +1,6 @@
 package com.auction.domain.auth.controller;
 
 import com.auction.common.apipayload.ApiResponse;
-import com.auction.common.entity.AuthUser;
 import com.auction.domain.auth.dto.request.LoginRequestDto;
 import com.auction.domain.auth.dto.request.SignoutRequest;
 import com.auction.domain.auth.dto.request.SignupRequestDto;
@@ -10,8 +9,9 @@ import com.auction.domain.auth.dto.response.SignupResponseDto;
 import com.auction.domain.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import static com.auction.common.constants.Const.USER_ID;
 
 @RestController
 @RequiredArgsConstructor
@@ -32,10 +32,10 @@ public class AuthController {
 
     @PutMapping("/v1/auth/signout")
     public ApiResponse<Void> deactivateUser(
-            @AuthenticationPrincipal AuthUser authUser,
+            @RequestHeader(USER_ID) long userId,
             @RequestBody SignoutRequest signoutRequest) {
 
-        authService.deactivateUser(authUser, signoutRequest);
+        authService.deactivateUser(userId, signoutRequest);
         return ApiResponse.ok(null);
     }
 }

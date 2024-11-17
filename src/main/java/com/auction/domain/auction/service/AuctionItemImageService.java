@@ -10,6 +10,8 @@ import com.auction.domain.auction.entity.Auction;
 import com.auction.domain.auction.entity.AuctionItemImage;
 import com.auction.domain.auction.repository.AuctionItemImageRepository;
 import com.auction.domain.auction.repository.AuctionRepository;
+import com.auction.domain.user.entity.User;
+import com.auction.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -29,19 +31,21 @@ public class AuctionItemImageService {
     private final AuctionItemImageRepository auctionItemImageRepository;
     private final AmazonS3Client amazonS3Client;
     private final AuctionRepository auctionRepository;
+    private final UserService userService;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
-    private Auction getAuctionItemWithUser(AuthUser authUser, Long auctionItemId) {
-        return auctionRepository.findByIdAndSellerId(auctionItemId, authUser.getId()).orElseThrow(
+    private Auction getAuctionItemWithUser(User user, Long auctionItemId) {
+        return auctionRepository.findByIdAndSellerId(auctionItemId, user.getId()).orElseThrow(
                 () -> new ApiException(ErrorStatus._NOT_FOUND_AUCTION_ITEM)
         );
     }
 
     @Transactional
-    public List<AuctionItemImageResponseDto> uploadImages(AuthUser authUser, Long auctionId, List<MultipartFile> files) throws IOException {
-        Auction auction = getAuctionItemWithUser(authUser, auctionId);
+    public List<AuctionItemImageResponseDto> uploadImages(Long userId, Long auctionId, List<MultipartFile> files) throws IOException {
+        User user = userService.getUser(userId);
+        Auction auction = getAuctionItemWithUser(user, auctionId);
 
         List<AuctionItemImageResponseDto> responseDtos = new ArrayList<>();
         List<String> supportedFileTypes = List.of("image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf");
@@ -73,8 +77,9 @@ public class AuctionItemImageService {
     }
 
     @Transactional
-    public String deleteImages(AuthUser authUser, Long auctionId, Long imageId) {
-        getAuctionItemWithUser(authUser, auctionId);
+    public String deleteImages(Long userId, Long auctionId, Long imageId) {
+        User user = userService.getUser(userId);
+        getAuctionItemWithUser(user, auctionId);
         AuctionItemImage auctionItemImage = auctionItemImageRepository.findById(imageId).orElseThrow(
                 () -> new ApiException(ErrorStatus._NOT_FOUND_AUCTION_ITEM_IMAGE)
         );

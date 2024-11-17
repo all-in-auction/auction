@@ -1,26 +1,14 @@
 package com.auction.domain.review.controller;
 
 import com.auction.common.apipayload.ApiResponse;
-import com.auction.common.entity.AuthUser;
-import com.auction.domain.auction.dto.request.AuctionItemChangeRequestDto;
-import com.auction.domain.auction.dto.request.BidCreateRequestDto;
-import com.auction.domain.auction.dto.response.AuctionRankingResponseDto;
-import com.auction.domain.auction.dto.response.AuctionResponseDto;
-import com.auction.domain.auction.dto.response.BidCreateResponseDto;
 import com.auction.domain.review.dto.request.ReviewCreateRequestDto;
 import com.auction.domain.review.dto.request.ReviewUpdateRequestDto;
 import com.auction.domain.review.dto.response.ReviewResponseDto;
 import com.auction.domain.review.service.ReviewService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import static com.auction.common.constants.Const.USER_ID;
 
 @RestController
 @RequestMapping("/api")
@@ -30,18 +18,18 @@ public class ReviewController {
 
     // 리뷰 생성
     @PostMapping("/v2/auctions/{auctionId}/reviews")
-    public ApiResponse<ReviewResponseDto> createReview(@AuthenticationPrincipal AuthUser authUser,
+    public ApiResponse<ReviewResponseDto> createReview(@RequestHeader(USER_ID) long userId,
                                                         @PathVariable Long auctionId,
                                                         @RequestBody ReviewCreateRequestDto requestDto) {
-        return ApiResponse.created(reviewService.createReview(authUser, auctionId, requestDto));
+        return ApiResponse.created(reviewService.createReview(userId, auctionId, requestDto));
     }
 
     // 리뷰 수정
     @PutMapping("/v2/auctions/{auctionId}/reviews")
-    public ApiResponse<ReviewResponseDto> updateReview(@AuthenticationPrincipal AuthUser authUser,
+    public ApiResponse<ReviewResponseDto> updateReview(@RequestHeader(USER_ID) long userId,
                                                        @PathVariable Long auctionId,
                                                        @RequestBody ReviewUpdateRequestDto requestDto) {
-        return ApiResponse.ok(reviewService.updateReview(authUser, auctionId,requestDto));
+        return ApiResponse.ok(reviewService.updateReview(userId, auctionId,requestDto));
     }
 
     // 리뷰 조회
@@ -52,9 +40,9 @@ public class ReviewController {
 
     // 리뷰 삭제
     @DeleteMapping("/v2/auctions/{auctionId}/reviews")
-    public ApiResponse<String> deleteReview(@AuthenticationPrincipal AuthUser authUser,
+    public ApiResponse<String> deleteReview(@RequestHeader(USER_ID) long userId,
                                           @PathVariable Long auctionId) {
-        reviewService.deleteReview(authUser, auctionId);
+        reviewService.deleteReview(userId, auctionId);
         return ApiResponse.ok("리뷰가 삭제되었습니다.");
     }
 
