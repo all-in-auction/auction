@@ -11,6 +11,7 @@ import com.auction.domain.review.dto.response.ReviewResponseDto;
 import com.auction.domain.review.entity.Review;
 import com.auction.domain.review.repository.ReviewRepository;
 import com.auction.domain.user.entity.User;
+import com.auction.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,9 +24,10 @@ import java.util.Objects;
 public class ReviewService {
     private final AuctionRepository auctionRepository;
     private final ReviewRepository reviewRepository;
+    private final UserRepository userRepository;
 
     @Transactional
-    public ReviewResponseDto createReview(AuthUser authUser, Long auctionId, ReviewCreateRequestDto requestDto) {
+    public ReviewResponseDto createReview(Long userId, Long auctionId, ReviewCreateRequestDto requestDto) {
         Auction auction = auctionRepository.findByAuctionId(auctionId).orElseThrow(
                 () -> new ApiException(ErrorStatus._NOT_FOUND_AUCTION)
         );
@@ -34,18 +36,22 @@ public class ReviewService {
             throw new ApiException(ErrorStatus._INVALID_REQUEST_REVIEW);
         }
 
-        if (!Objects.equals(auction.getBuyerId(), authUser.getId())) {
+        if (!Objects.equals(auction.getBuyerId(), userId)) {
             throw new ApiException(ErrorStatus._PERMISSION_DENIED);
         }
 
-        Review review = new Review(auction, User.fromAuthUser(authUser), requestDto);
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new ApiException(ErrorStatus._NOT_FOUND_USER)
+        );
+
+        Review review = new Review(auction, user, requestDto);
         reviewRepository.save(review);
 
         return ReviewResponseDto.of(review);
     }
 
     @Transactional
-    public ReviewResponseDto updateReview(AuthUser authUser, Long auctionId, ReviewUpdateRequestDto requestDto) {
+    public ReviewResponseDto updateReview(Long userId, Long auctionId, ReviewUpdateRequestDto requestDto) {
         Auction auction = auctionRepository.findByAuctionId(auctionId).orElseThrow(
                 () -> new ApiException(ErrorStatus._NOT_FOUND_AUCTION)
         );
@@ -54,7 +60,7 @@ public class ReviewService {
                 () -> new ApiException(ErrorStatus._NOT_FOUND_REVIEW)
         );
 
-        if (!review.getUser().getId().equals(authUser.getId())) {
+        if (!review.getUser().getId().equals(userId)) {
             throw new ApiException(ErrorStatus._PERMISSION_DENIED);
         }
 
@@ -71,12 +77,12 @@ public class ReviewService {
     }
 
     @Transactional
-    public void deleteReview(AuthUser authUser, Long auctionId) {
+    public void deleteReview(Long userId, Long auctionId) {
         Review review = reviewRepository.findByAuctionId(auctionId).orElseThrow(
                 () -> new ApiException(ErrorStatus._NOT_FOUND_REVIEW)
         );
 
-        if (!authUser.getId().equals(review.getUser().getId())) {
+        if (!userId.equals(review.getUser().getId())) {
             throw new ApiException(ErrorStatus._PERMISSION_DENIED);
         }
 

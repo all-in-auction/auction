@@ -30,8 +30,13 @@ public class Review {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Column(name = "title")
     private String title;
+
+    @Column(name = "content")
     private String content;
+
+    @Column(name = "star")
     private int star;
 
     public Review(Auction auction, User user, ReviewCreateRequestDto requestDto) {

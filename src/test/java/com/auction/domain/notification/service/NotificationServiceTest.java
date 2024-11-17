@@ -82,7 +82,7 @@ class NotificationServiceTest {
         when(notificationRepository.getNotificationListByUserIdAndType(authUser.getId(), "auction")).thenReturn(list);
 
         // when
-        List<GetNotificationListDto> results = notificationService.getNotificationList(authUser, "auction");
+        List<GetNotificationListDto> results = notificationService.getNotificationList(authUser.getId(), "auction");
 
         // then
         assertEquals(1, results.size());

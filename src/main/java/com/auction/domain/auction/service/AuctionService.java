@@ -4,10 +4,8 @@ import com.auction.Point;
 import com.auction.PointServiceGrpc;
 import com.auction.common.annotation.DistributedLock;
 import com.auction.common.apipayload.status.ErrorStatus;
-import com.auction.common.entity.AuthUser;
 import com.auction.common.exception.ApiException;
 import com.auction.common.utils.TimeConverter;
-import com.auction.domain.auction.dto.AuctionHistoryDto;
 import com.auction.domain.auction.dto.request.AuctionCreateRequestDto;
 import com.auction.domain.auction.dto.request.AuctionItemChangeRequestDto;
 import com.auction.domain.auction.dto.request.BidCreateRequestDto;
@@ -29,9 +27,6 @@ import com.auction.domain.notification.enums.NotificationType;
 import com.auction.domain.notification.service.NotificationService;
 import com.auction.domain.user.entity.User;
 import com.auction.domain.user.service.UserService;
-import com.auction.feign.dto.request.PointChangeRequestDto;
-import com.auction.feign.enums.PaymentType;
-import com.auction.feign.service.PointService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,10 +49,10 @@ public class AuctionService {
     private final ItemRepository itemRepository;
     private final AuctionRepository auctionRepository;
 
-    private final PointService pointService;
     private final DepositService depositService;
     private final UserService userService;
     private final AuctionItemElasticService elasticService;
+    private final AuctionBidGrpcService auctionBidGrpcService;
 
     private final AuctionPublisher auctionPublisher;
     private final NotificationService notificationService;
@@ -80,20 +75,22 @@ public class AuctionService {
                 .orElseThrow(() -> new ApiException(ErrorStatus._NOT_FOUND_AUCTION));
     }
 
-    private Auction getAuctionWithUser(AuthUser authUser, Long auctionId) {
-        return auctionRepository.findByIdAndSellerId(auctionId, authUser.getId()).orElseThrow(
+    private Auction getAuctionWithUser(User user, Long auctionId) {
+        return auctionRepository.findByIdAndSellerId(auctionId, user.getId()).orElseThrow(
                 () -> new ApiException(ErrorStatus._NOT_FOUND_AUCTION_ITEM)
         );
     }
 
     @Transactional
-    public AuctionCreateResponseDto createAuction(AuthUser authUser, AuctionCreateRequestDto requestDto) {
+    public AuctionCreateResponseDto createAuction(Long userId, AuctionCreateRequestDto requestDto) {
         Item item = Item.of(requestDto.getItem().getName(),
                 requestDto.getItem().getDescription(),
                 ItemCategory.of(requestDto.getItem().getCategory()));
         Item savedItem = itemRepository.save(item);
         elasticService.saveToElastic(ItemDocument.from(savedItem));
-        Auction auction = Auction.of(savedItem, User.fromAuthUser(authUser), requestDto.getMinPrice(), requestDto.isAutoExtension(), requestDto.getExpireAfter());
+
+        User user = userService.getUser(userId);
+        Auction auction = Auction.of(savedItem, user, requestDto.getMinPrice(), requestDto.isAutoExtension(), requestDto.getExpireAfter());
         Auction savedAuction = auctionRepository.save(auction);
 
         auctionPublisher.auctionPublisher(
@@ -117,8 +114,9 @@ public class AuctionService {
     }
 
     @Transactional
-    public AuctionResponseDto updateAuctionItem(AuthUser authUser, Long auctionId, AuctionItemChangeRequestDto requestDto) {
-        Auction auction = getAuctionWithUser(authUser, auctionId);
+    public AuctionResponseDto updateAuctionItem(Long userId, Long auctionId, AuctionItemChangeRequestDto requestDto) {
+        User user = userService.getUser(userId);
+        Auction auction = getAuctionWithUser(user, auctionId);
         Item item = auction.getItem();
 
         if (requestDto.getName() != null) {
@@ -138,8 +136,9 @@ public class AuctionService {
     }
 
     @Transactional
-    public String deleteAuctionItem(AuthUser authUser, Long auctionId) {
-        Auction auction = getAuctionWithUser(authUser, auctionId);
+    public String deleteAuctionItem(Long userId, Long auctionId) {
+        User user = userService.getUser(userId);
+        Auction auction = getAuctionWithUser(user, auctionId);
         elasticService.deleteFromElastic(ItemDocument.from(auction.getItem()));
         auctionRepository.delete(auction);
         return "물품이 삭제되었습니다.";
@@ -147,8 +146,8 @@ public class AuctionService {
 
     @DistributedLock(key = "T(java.lang.String).format('Auction%d', #auctionId)")
     @CircuitBreaker(name = "createBidService", fallbackMethod = "createBidFallback")
-    public BidCreateResponseDto createBid(long curUserId, long auctionId, BidCreateRequestDto bidCreateRequestDto) {
-        User user = User.fromUserId(curUserId);
+    public BidCreateResponseDto createBid(Long userId, Long auctionId, BidCreateRequestDto bidCreateRequestDto) {
+        User user = userService.getUser(userId);
         Auction auction = getAuctionById(auctionId);
 
         if (Objects.equals(auction.getSeller().getId(), user.getId())) {
@@ -166,12 +165,11 @@ public class AuctionService {
         validBidPrice(bidPrice, auction, auctionHistoryKey);
 
         // TODO : gRPC 변환
-        int pointAmount = grpcUserPoint(user.getId());
+        int pointAmount = auctionBidGrpcService.grpcUserPoint(user.getId());
 
         if (pointAmount < bidPrice) {
             throw new ApiException(ErrorStatus._INVALID_NOT_ENOUGH_POINT);
         }
-
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -181,25 +179,21 @@ public class AuctionService {
             auction.changeExpireAt(auction.getExpireAt().plusMinutes(10L));
         }
 
+        auction.changeMaxPrice(bidPrice);
+        auctionRepository.save(auction);
+
         // 포인트 차감, 보증금 예치
         depositService.getDeposit(user.getId(), auctionId).ifPresentOrElse(
                 (deposit) -> {
                     int prevDeposit = Integer.parseInt(deposit.toString());
                     int gap = bidPrice - prevDeposit;
 
-                    // TODO : gRPC 변환
-                    grpcDecreasePoint(user.getId(), gap);
-                    // TODO : gRPC 변환
-                    createPointHistory(user.getId(), gap, Point.PaymentType.SPEND);
-//                    pointHistoryService.createPointHistory(user, gap, PaymentType.SPEND);
+                    auctionBidGrpcService.grpcDecreasePoint(user.getId(), gap);
+                    auctionBidGrpcService.createPointHistory(user.getId(), gap, Point.PaymentType.SPEND);
                 },
                 () -> {
-                    // TODO : gRPC 변환
-                    grpcDecreasePoint(user.getId(), bidPrice);
-//                    pointService.decreasePoint(user.getId(), bidPrice);
-                    // TODO : gRPC 변환
-                    createPointHistory(user.getId(), bidPrice, Point.PaymentType.SPEND);
-//                    pointHistoryService.createPointHistory(user, bidPrice, PaymentType.SPEND);
+                    auctionBidGrpcService.grpcDecreasePoint(user.getId(), bidPrice);
+                    auctionBidGrpcService.createPointHistory(user.getId(), bidPrice, Point.PaymentType.SPEND);
                 }
         );
         depositService.placeDeposit(user.getId(), auctionId, bidPrice);
@@ -211,21 +205,18 @@ public class AuctionService {
                 .filter(tuples -> !tuples.isEmpty())
                 .ifPresent(tuples -> {
                     for (ZSetOperations.TypedTuple<Object> tuple : tuples) {
-                        long userId = Long.parseLong(String.valueOf(tuple.getValue()));
+                        long refundUserId = Long.parseLong(String.valueOf(tuple.getValue()));
                         int price = Objects.requireNonNull(tuple.getScore()).intValue();
-                        if (userId != user.getId()) {
-                            AuctionHistoryDto auctionHistoryDto = AuctionHistoryDto.of(userId, price);
-                            kafkaTemplate.send(refundTopic, RefundEvent.from(auctionId, auctionHistoryDto));
+                        if (refundUserId != user.getId()) {
+                            depositService.deleteDeposit(refundUserId, auctionId);
+                            auctionBidGrpcService.increasePoint(refundUserId, price);
+                            auctionBidGrpcService.createPointHistory(refundUserId,price,Point.PaymentType.REFUND);
                         }
                     }
                 });
 
         // redis zset 에 입찰 기록 저장
         redisTemplate.opsForZSet().add(auctionHistoryKey, user.getId().toString(), bidPrice);
-
-        auction.changeMaxPrice(bidPrice);
-        auctionRepository.save(auction);
-
         redisTemplate.opsForZSet().incrementScore(AUCTION_RANKING_PREFIX, String.valueOf(auctionId), 1);
 
         return BidCreateResponseDto.of(user.getId(), auction);
@@ -318,6 +309,12 @@ public class AuctionService {
                     "경매 아이디 " + auctionId + "이(가) 유찰되었습니다.", relatedAuctionUrl + auctionId);
         } else {
             // 경매 낙찰
+            // 판매자 포인트 증가
+            auctionBidGrpcService.increasePoint(auction.getSeller().getId(), auction.getMaxPrice());
+            auctionBidGrpcService.createPointHistory(auction.getSeller().getId(), auction.getMaxPrice(), Point.PaymentType.RECEIVE);
+//            pointService.increasePoint(auction.getSeller().getId(), auction.getMaxPrice());
+//            pointHistoryService.createPointHistory(auction.getSeller(), auction.getMaxPrice(), PaymentType.RECEIVE);
+
             // 구매자 경매 이력 수정
             String buyerId = (String) result.iterator().next();
             User buyer = userService.getUser(Long.parseLong(buyerId));
@@ -333,10 +330,6 @@ public class AuctionService {
                     NotificationType.AUCTION,
                     "입찰한 " + auction.getItem().getName() + "이(가) 낙찰되었습니다!",
                     relatedAuctionUrl + auctionId);
-
-            // 판매자 포인트 증가
-            PointChangeRequestDto pointChangeRequestDto = PointChangeRequestDto.of(auction.getMaxPrice(), PaymentType.RECEIVE);
-            pointService.changePoint(auction.getSeller().getId(), pointChangeRequestDto);
         }
     }
 

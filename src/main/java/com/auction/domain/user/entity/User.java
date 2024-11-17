@@ -24,11 +24,14 @@ public class User extends TimeStamped {
     private Long id;
 
     @NotNull
-    @Column(unique = true)
+    @Column(name = "email", unique = true)
     private String email;
 
+    @Column(name = "password")
     @NotNull
     private String password;
+
+    @Column(name = "name")
 
     @NotNull
     private String name;
@@ -38,13 +41,19 @@ public class User extends TimeStamped {
 
     @Column(name = "zip_code")
     private int zipCode;
+
+    @Column(name = "address1")
     private String address1;
+
+    @Column(name = "address2")
     private String address2;
 
     @NotNull
     @Enumerated(EnumType.STRING)
+    @Column(name = "authority")
     private UserRole authority;
 
+    @Column(name = "activate")
     @NotNull
     private boolean activate;
 

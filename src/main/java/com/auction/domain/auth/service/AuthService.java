@@ -14,6 +14,7 @@ import com.auction.domain.auth.dto.response.SignupResponseDto;
 import com.auction.domain.notification.service.NotificationService;
 import com.auction.domain.user.entity.User;
 import com.auction.domain.user.repository.UserRepository;
+import com.auction.domain.user.service.UserService;
 import com.auction.feign.service.PointService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +32,6 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final PointService pointService;
     private final NotificationService notificationService;
-    private final PointServiceGrpc.PointServiceBlockingStub pointServiceStub; // gRPC Stub
 
 
     @Transactional
@@ -39,25 +39,8 @@ public class AuthService {
         String encodedPassword = passwordEncoder.encode(signupRequest.getPassword());
         User user = userRepository.save(new User(encodedPassword, signupRequest));
 
-        // gRPC를 통한 포인트 생성 요청
-        try {
-            Point.CreatePointRequest grpcRequest = Point.CreatePointRequest.newBuilder()
-                    .setUserId(user.getId()) // User의 ID를 요청에 포함
-                    .build();
-
-            Point.CreatePointResponse grpcResponse = pointServiceStub.createPoint(grpcRequest);
-
-            if (!"SUCCESS".equals(grpcResponse.getStatus())) {
-                throw new ApiException(ErrorStatus._INVALID_REQUEST);
-            }
-        } catch (Exception e) {
-            log.info("error : {}", e.getMessage());
-            e.printStackTrace();
-        }
-
-        // TODO(auth) : GRPC Vs. feign?
         // 유저 포인트 생성
-//        pointService.createPoint(user.getId());
+        pointService.createPoint(user.getId());
 
         return SignupResponseDto.of(user);
     }
@@ -78,8 +61,8 @@ public class AuthService {
     }
 
     @Transactional
-    public void deactivateUser(AuthUser authUser, SignoutRequest signoutRequest) {
-        User user = userRepository.findById(authUser.getId()).orElseThrow(
+    public void deactivateUser(Long userId, SignoutRequest signoutRequest) {
+        User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApiException(ErrorStatus._NOT_FOUND_USER)
         );
 

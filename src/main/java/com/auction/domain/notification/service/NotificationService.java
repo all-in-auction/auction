@@ -75,7 +75,7 @@ public class NotificationService {
     }
 
     @Transactional
-    public List<GetNotificationListDto> getNotificationList(AuthUser authUser, String type) {
-        return notificationRepository.getNotificationListByUserIdAndType(authUser.getId(), type);
+    public List<GetNotificationListDto> getNotificationList(Long userId, String type) {
+        return notificationRepository.getNotificationListByUserIdAndType(userId, type);
     }
 }

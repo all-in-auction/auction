@@ -17,13 +17,14 @@ public class Item extends TimeStamped {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(length = 150)
+    @Column(name = "name", length = 150)
     private String name;
 
-    @Column(length = 500)
+    @Column(name = "description", length = 500)
     private String description;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "category")
     private ItemCategory category;
 
     @OneToOne(mappedBy = "item", cascade = CascadeType.ALL)

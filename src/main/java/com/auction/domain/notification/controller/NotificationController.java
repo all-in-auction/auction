@@ -1,19 +1,18 @@
 package com.auction.domain.notification.controller;
 
 import com.auction.common.apipayload.ApiResponse;
-import com.auction.common.entity.AuthUser;
 import com.auction.domain.notification.dto.GetNotificationListDto;
 import com.auction.domain.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
+
+import static com.auction.common.constants.Const.USER_ID;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,13 +22,13 @@ public class NotificationController {
     private final NotificationService notificationService;
 
     @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter subscribe(@AuthenticationPrincipal AuthUser authUser) {
-        return notificationService.subscribe(authUser.getId().toString());
+    public SseEmitter subscribe(@RequestHeader(USER_ID) long userId) {
+        return notificationService.subscribe((String.valueOf(userId)));
     }
 
     @GetMapping(value = "/subscribe2", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<String>> streamMessages(@AuthenticationPrincipal AuthUser authUser) {
-        return notificationService.subscribe2(authUser.getId().toString());
+    public Flux<ServerSentEvent<String>> streamMessages(@RequestHeader(USER_ID) long userId) {
+        return notificationService.subscribe2((String.valueOf(userId)));
     }
 
     @GetMapping(value = "/ping", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
@@ -38,8 +37,8 @@ public class NotificationController {
     }
 
     @GetMapping
-    public ApiResponse<List<GetNotificationListDto>> getNotificationList(@AuthenticationPrincipal AuthUser authUser,
+    public ApiResponse<List<GetNotificationListDto>> getNotificationList(@RequestHeader(USER_ID) long userId,
                                                                          @RequestParam(required = false) String type) {
-        return ApiResponse.ok(notificationService.getNotificationList(authUser, type));
+        return ApiResponse.ok(notificationService.getNotificationList(userId, type));
     }
 }

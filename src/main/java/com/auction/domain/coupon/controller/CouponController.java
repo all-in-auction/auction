@@ -1,14 +1,12 @@
 package com.auction.domain.coupon.controller;
 
 import com.auction.common.apipayload.ApiResponse;
-import com.auction.common.entity.AuthUser;
 import com.auction.domain.coupon.dto.request.CouponUseRequestDto;
 import com.auction.domain.coupon.dto.response.CouponClaimResponseDto;
 import com.auction.domain.coupon.dto.response.CouponGetResponseDto;
 import com.auction.domain.coupon.service.CouponService;
 import com.auction.domain.coupon.service.CouponUserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import static com.auction.common.constants.Const.USER_ID;
@@ -23,27 +21,27 @@ public class CouponController {
     /**
      * 쿠폰 발급
      *
-     * @param authUser
+     * @param userId
      * @param couponId
      * @return
      */
     @PostMapping("/v2/coupons/{couponId}/claim")
-    public ApiResponse<CouponClaimResponseDto> claimCoupon(@AuthenticationPrincipal AuthUser authUser,
+    public ApiResponse<CouponClaimResponseDto> claimCoupon(@RequestHeader(USER_ID) long userId,
                                                            @PathVariable Long couponId) {
-        return ApiResponse.ok(couponService.claimCoupon(authUser, couponId));
+        return ApiResponse.ok(couponService.claimCoupon(userId, couponId));
     }
 
     /**
      * 쿠폰 발급
      *
-     * @param authUser
+     * @param userId
      * @param couponId
      * @return
      */
     @PostMapping("/v3/coupons/{couponId}/claim")
-    public ApiResponse<CouponClaimResponseDto> claimCouponV3(@AuthenticationPrincipal AuthUser authUser,
+    public ApiResponse<CouponClaimResponseDto> claimCouponV3(@RequestHeader(USER_ID) long userId,
                                                              @PathVariable Long couponId) {
-        return ApiResponse.ok(couponService.claimCouponV3(authUser, couponId));
+        return ApiResponse.ok(couponService.claimCouponV3(userId, couponId));
     }
 
     /**

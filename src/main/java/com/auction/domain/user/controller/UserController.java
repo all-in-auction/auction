@@ -1,16 +1,16 @@
 package com.auction.domain.user.controller;
 
 import com.auction.common.apipayload.ApiResponse;
-import com.auction.common.entity.AuthUser;
 import com.auction.domain.auction.dto.response.ItemResponseDto;
 import com.auction.domain.user.dto.request.UserUpdateRequestDto;
 import com.auction.domain.user.dto.response.UserResponseDto;
 import com.auction.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static com.auction.common.constants.Const.USER_ID;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,23 +20,23 @@ public class UserController {
 
     @PostMapping("/v2/users")
     public ApiResponse<UserResponseDto> updateUser(
-            @AuthenticationPrincipal AuthUser authUser,
+            @RequestHeader(USER_ID) long userId,
             @RequestBody UserUpdateRequestDto userUpdateRequest) {
 
-        return ApiResponse.ok(userService.updateUser(authUser, userUpdateRequest));
+        return ApiResponse.ok(userService.updateUser(userId, userUpdateRequest));
     }
 
     @GetMapping("/v2/users/mypage/sales")
     public ApiResponse<List<ItemResponseDto>> getSales(
-        @AuthenticationPrincipal AuthUser authUser) {
+            @RequestHeader(USER_ID) long userId) {
 
-        return ApiResponse.ok(userService.getSales(authUser));
+        return ApiResponse.ok(userService.getSales(userId));
     }
 
     @GetMapping("/v2/users/mypage/purchases")
     public ApiResponse<List<ItemResponseDto>> getPurchases(
-            @AuthenticationPrincipal AuthUser authUser) {
+            @RequestHeader(USER_ID) long userId) {
 
-        return ApiResponse.ok(userService.getPurchases(authUser));
+        return ApiResponse.ok(userService.getPurchases(userId));
     }
 }
