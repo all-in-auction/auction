@@ -50,17 +50,15 @@ public class AuctionService {
     private final ItemRepository itemRepository;
     private final AuctionRepository auctionRepository;
 
-    //    private final PointService pointService;
-//    private final PointHistoryService pointHistoryService;
     private final DepositService depositService;
     private final UserService userService;
     private final AuctionItemElasticService elasticService;
+    private final AuctionBidGrpcService auctionBidGrpcService;
 
     private final AuctionPublisher auctionPublisher;
     private final NotificationService notificationService;
 
     private final RedisTemplate<String, Object> redisTemplate;
-    private final PointServiceGrpc.PointServiceBlockingStub pointServiceStub;
     private final KafkaTemplate<String, RefundEvent> kafkaTemplate;
 
     @Value("${kafka.topic.refund}")
@@ -162,7 +160,7 @@ public class AuctionService {
         validBidPrice(bidPrice, auction, auctionHistoryKey);
 
         // TODO : gRPC 변환
-        int pointAmount = grpcUserPoint(user.getId());
+        int pointAmount = auctionBidGrpcService.grpcUserPoint(user.getId());
       
         if (pointAmount < bidPrice) {
             throw new ApiException(ErrorStatus._INVALID_NOT_ENOUGH_POINT);
@@ -184,17 +182,17 @@ public class AuctionService {
                     int gap = bidPrice - prevDeposit;
 
                     // TODO : gRPC 변환
-                    grpcDecreasePoint(user.getId(), gap);
+                    auctionBidGrpcService.grpcDecreasePoint(user.getId(), gap);
                     // TODO : gRPC 변환
-                    createPointHistory(user.getId(), gap, Point.PaymentType.SPEND);
+                    auctionBidGrpcService.createPointHistory(user.getId(), gap, Point.PaymentType.SPEND);
 //                    pointHistoryService.createPointHistory(user, gap, PaymentType.SPEND);
                 },
                 () -> {
                     // TODO : gRPC 변환
-                    grpcDecreasePoint(user.getId(), bidPrice);
+                    auctionBidGrpcService.grpcDecreasePoint(user.getId(), bidPrice);
 //                    pointService.decreasePoint(user.getId(), bidPrice);
                     // TODO : gRPC 변환
-                    createPointHistory(user.getId(), bidPrice, Point.PaymentType.SPEND);
+                    auctionBidGrpcService.createPointHistory(user.getId(), bidPrice, Point.PaymentType.SPEND);
 //                    pointHistoryService.createPointHistory(user, bidPrice, PaymentType.SPEND);
                 }
         );
@@ -227,60 +225,6 @@ public class AuctionService {
         return BidCreateResponseDto.of(user.getId(), auction);
     }
 
-    public int grpcUserPoint(long userId) {
-        try {
-            Point.GetPointsRequest grpcRequest = Point.GetPointsRequest.newBuilder()
-                    .setUserId(userId)
-                    .build();
-
-            Point.GetPointsResponse pointAmount = pointServiceStub.getPoints(grpcRequest);
-
-            return pointAmount.getTotalPoint();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new ApiException(ErrorStatus._INVALID_REQUEST);
-        }
-    }
-
-    public void grpcDecreasePoint(long userId, int amount) {
-        try {
-            Point.DecreasePointsRequest grpcRequest = Point.DecreasePointsRequest.newBuilder()
-                    .setUserId(userId)
-                    .setAmount(amount)
-                    .build();
-
-            Point.DecreasePointsResponse grpcResponse = pointServiceStub.decreasePoints(grpcRequest);
-
-            if (grpcResponse.getStatus().equalsIgnoreCase("FAILED")) {
-                throw new ApiException(ErrorStatus._INVALID_REQUEST);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new ApiException(ErrorStatus._INVALID_REQUEST);
-        }
-    }
-
-    public void createPointHistory(long userId, int amount, Point.PaymentType paymentType) {
-        try {
-            Point.CreatePointHistoryRequest grpcRequest = Point.CreatePointHistoryRequest.newBuilder()
-                    .setUserId(userId)
-                    .setAmount(amount)
-                    .setPaymentType(paymentType)
-                    .build();
-
-            Point.CreatePointHistoryResponse grpcResponse = pointServiceStub.createPointHistory(grpcRequest);
-
-            if (grpcResponse.getStatus().equalsIgnoreCase("FAIL")) {
-                throw new ApiException(ErrorStatus._INVALID_REQUEST);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new ApiException(ErrorStatus._INVALID_REQUEST);
-        }
-    }
 
     @Transactional
     public void closeAuction(AuctionEvent auctionEvent) {
@@ -307,6 +251,8 @@ public class AuctionService {
         } else {
             // 경매 낙찰
             // 판매자 포인트 증가
+            auctionBidGrpcService.increasePoint(auction.getSeller().getId(), auction.getMaxPrice());
+            auctionBidGrpcService.createPointHistory(auction.getSeller().getId(), auction.getMaxPrice(), Point.PaymentType.RECEIVE);
 //            pointService.increasePoint(auction.getSeller().getId(), auction.getMaxPrice());
 //            pointHistoryService.createPointHistory(auction.getSeller(), auction.getMaxPrice(), PaymentType.RECEIVE);
 

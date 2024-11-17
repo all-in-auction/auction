@@ -22,20 +22,35 @@ public class User extends TimeStamped {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
+    @Column(name = "email", unique = true)
     private String email;
 
+    @Column(name = "password")
     private String password;
+
+    @Column(name = "name")
     private String name;
+
+    @Column(name = "nick_name")
     private String nickName;
+
+    @Column(name = "zip_code")
     private int zipCode;
+
+    @Column(name = "address1")
     private String address1;
+
+    @Column(name = "address2")
     private String address2;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "authority")
     private UserRole authority;
 
+    @Column(name = "activate")
     private boolean activate;
+
+    @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
     public User(String encodedPassword, SignupRequestDto requestDto) {

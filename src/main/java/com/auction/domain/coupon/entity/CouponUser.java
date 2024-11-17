@@ -30,6 +30,7 @@ public class CouponUser extends TimeStamped {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Column(name = "used_at")
     private LocalDateTime usedAt;
 
     @Column(name = "point_history_Id")

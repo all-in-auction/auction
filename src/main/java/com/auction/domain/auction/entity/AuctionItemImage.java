@@ -17,6 +17,7 @@ public class AuctionItemImage {
     private Long id;
 
     @NotNull
+    @Column(name = "path")
     private String path;
 
     @NotNull
@@ -28,6 +29,7 @@ public class AuctionItemImage {
     private String originName;
 
     @NotNull
+    @Column(name = "extension")
     private String extension;
 
     @NotNull

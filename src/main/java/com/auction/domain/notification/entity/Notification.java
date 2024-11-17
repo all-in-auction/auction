@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.checkerframework.checker.units.qual.C;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -27,6 +28,7 @@ public class Notification extends TimeStamped {
     private User receiver;
 
     @NotNull
+    @Column(name = "content")
     private String content;
 
     @Column(name = "related_url")
@@ -38,6 +40,7 @@ public class Notification extends TimeStamped {
 
     @NotNull
     @Enumerated(EnumType.STRING)
+    @Column(name = "type")
     private NotificationType type;
 
     private Notification(User user, String content, String relatedUrl, NotificationType type) {

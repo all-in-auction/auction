@@ -27,9 +27,11 @@ public class Coupon {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate expireAt;
 
+    @Column(name = "amount")
     private Integer amount;
 
     @NotNull
+    @Column(name = "name")
     private String name;
 
     @NotNull
