@@ -12,15 +12,14 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import static com.auction.common.constants.Const.USER_ID;
 
 @FeignClient(
-        name = "point-service",
-        url = "${spring.cloud.openfeign.url}",
+        name = "points-service",
         configuration = FeignConfig.class
 )
 public interface PointService {
-    @PostMapping("/v4/points")
+    @PostMapping("/api/internal/v4/points")
     ApiResponse<Void> createPoint(@RequestHeader(USER_ID) long userId);
 
-    @PatchMapping("/v4/points")
+    @PatchMapping("/api/internal/v4/points")
     ApiResponse<Void> changePoint(
             @RequestHeader(USER_ID) long userId,
             @RequestBody PointChangeRequestDto pointChangeRequestDto
