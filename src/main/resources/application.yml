@@ -31,7 +31,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: "prometheus,health"
+        include: prometheus,health,resilience4j.circuitbreakers
 
   endpoint:
     health:
