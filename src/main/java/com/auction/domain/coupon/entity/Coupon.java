@@ -50,7 +50,7 @@ public class Coupon {
     }
 
     public static Coupon from(CouponCreateRequestDto requestDto) {
-        return new Coupon(requestDto.getExpiredAt(), requestDto.getAmount(),
+        return new Coupon(requestDto.getExpireAt(), requestDto.getAmount(),
                 requestDto.getName(), requestDto.getDiscountRate());
     }
 
