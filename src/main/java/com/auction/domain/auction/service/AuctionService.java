@@ -205,18 +205,18 @@ public class AuctionService {
                 .filter(tuples -> !tuples.isEmpty())
                 .ifPresent(tuples -> {
                     for (ZSetOperations.TypedTuple<Object> tuple : tuples) {
-                        long tempUserId = Long.parseLong(String.valueOf(tuple.getValue()));
+                        long refundUserId = Long.parseLong(String.valueOf(tuple.getValue()));
                         int price = Objects.requireNonNull(tuple.getScore()).intValue();
-                        if (tempUserId != user.getId()) {
-                            AuctionHistoryDto auctionHistoryDto = AuctionHistoryDto.of(tempUserId, price);
-                            kafkaTemplate.send(refundTopic, RefundEvent.from(auctionId, auctionHistoryDto));
+                        if (refundUserId != user.getId()) {
+                            depositService.deleteDeposit(refundUserId, auctionId);
+                            auctionBidGrpcService.increasePoint(refundUserId, price);
+                            auctionBidGrpcService.createPointHistory(refundUserId,price,Point.PaymentType.REFUND);
                         }
                     }
                 });
 
         // redis zset 에 입찰 기록 저장
         redisTemplate.opsForZSet().add(auctionHistoryKey, user.getId().toString(), bidPrice);
-
         redisTemplate.opsForZSet().incrementScore(AUCTION_RANKING_PREFIX, String.valueOf(auctionId), 1);
 
         return BidCreateResponseDto.of(user.getId(), auction);
