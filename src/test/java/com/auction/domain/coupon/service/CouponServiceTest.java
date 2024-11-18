@@ -1,7 +1,6 @@
 package com.auction.domain.coupon.service;
 
 import com.auction.common.apipayload.status.ErrorStatus;
-import com.auction.common.entity.AuthUser;
 import com.auction.common.exception.ApiException;
 import com.auction.domain.coupon.dto.CouponClaimMessage;
 import com.auction.domain.coupon.dto.request.CouponCreateRequestDto;
@@ -9,8 +8,6 @@ import com.auction.domain.coupon.dto.response.CouponClaimResponseDto;
 import com.auction.domain.coupon.dto.response.CouponCreateResponseDto;
 import com.auction.domain.coupon.entity.Coupon;
 import com.auction.domain.coupon.repository.CouponRepository;
-import com.auction.domain.coupon.repository.CouponUserRepository;
-import com.auction.domain.user.enums.UserRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,11 +34,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class CouponServiceTest {
     @Mock
-    private CouponUserRepository couponUserRepository;
-    @Mock
     private CouponRepository couponRepository;
-    @Mock
-    private CouponUserService couponUserService;
     @Mock
     private RedisTemplate<String, Object> redisTemplate;
     @Mock
@@ -88,8 +81,8 @@ class CouponServiceTest {
     @DisplayName("쿠폰 발급 v3 - 정상 발급")
     void claimCouponSuccess() {
         // given
-        AuthUser authUser = new AuthUser(1L, "test@email.com", UserRole.USER);
-        Long couponId = 1L;
+        long userId = 1L;
+        long couponId = 1L;
         Coupon coupon = mock(Coupon.class);
         ReflectionTestUtils.setField(coupon, "id", 1L);
         ReflectionTestUtils.setField(coupon, "amount", 100);
@@ -101,7 +94,7 @@ class CouponServiceTest {
         ArgumentCaptor<CouponClaimMessage> messageCaptor = ArgumentCaptor.forClass(CouponClaimMessage.class);
 
         // when
-        CouponClaimResponseDto responseDto = couponService.claimCouponV3(authUser.getId(), couponId);
+        CouponClaimResponseDto responseDto = couponService.claimCouponV3(userId, couponId);
 
         // then
         verify(couponRepository, times(1)).findById(couponId);
@@ -110,7 +103,7 @@ class CouponServiceTest {
 
         // 검증: CouponClaimMessage
         CouponClaimMessage capturedMessage = messageCaptor.getValue();
-        assertEquals(authUser.getId(), capturedMessage.getUserId());
+        assertEquals(userId, capturedMessage.getUserId());
         assertEquals(couponId, capturedMessage.getCouponId());
 
         // 검증: CouponClaimResponseDto
@@ -122,12 +115,12 @@ class CouponServiceTest {
     @DisplayName("쿠폰 발급 v3 - 존재하지 않는 쿠폰")
     void claimNotFoundCoupon() {
         // given
-        AuthUser authUser = new AuthUser(1L, "test@email.com", UserRole.USER);
-        Long couponId = 1L;
+        long userId = 1L;
+        long couponId = 1L;
         when(couponRepository.findById(couponId)).thenReturn(Optional.empty());
 
         // when
-        Throwable throwable = catchThrowable(() -> couponService.claimCouponV3(authUser.getId(), couponId));
+        Throwable throwable = catchThrowable(() -> couponService.claimCouponV3(userId, couponId));
 
         // then
         assertThat(throwable)
@@ -139,8 +132,8 @@ class CouponServiceTest {
     @DisplayName("쿠폰 발급 v3 - 루아 스크립트 실행 중 예외 발생")
     void createIntervalServerError() {
         // given
-        AuthUser authUser = new AuthUser(1L, "test@email.com", UserRole.USER);
-        Long couponId = 1L;
+        long userId = 1L;
+        long couponId = 1L;
         Coupon coupon = mock(Coupon.class);
         ReflectionTestUtils.setField(coupon, "id", 1L);
         ReflectionTestUtils.setField(coupon, "amount", 100);
@@ -151,7 +144,7 @@ class CouponServiceTest {
                 .when(redisTemplate).execute(eq(redisScript), anyList());
 
         // when
-        Throwable throwable = catchThrowable(() -> couponService.claimCouponV3(authUser.getId(), couponId));
+        Throwable throwable = catchThrowable(() -> couponService.claimCouponV3(userId, couponId));
 
         // then
         assertThat(throwable)
@@ -163,8 +156,8 @@ class CouponServiceTest {
     @DisplayName("쿠폰 발급 v3 - 루아 스크립트 반환 값이 null인 경우")
     void createIntervalServerError2() {
         // given
-        AuthUser authUser = new AuthUser(1L, "test@email.com", UserRole.USER);
-        Long couponId = 1L;
+        long userId = 1L;
+        long couponId = 1L;
         Coupon coupon = mock(Coupon.class);
         ReflectionTestUtils.setField(coupon, "id", 1L);
         ReflectionTestUtils.setField(coupon, "amount", 100);
@@ -174,7 +167,7 @@ class CouponServiceTest {
         when(redisTemplate.execute(eq(redisScript), anyList())).thenReturn(null);
 
         // when
-        Throwable throwable = catchThrowable(() -> couponService.claimCouponV3(authUser.getId(), couponId));
+        Throwable throwable = catchThrowable(() -> couponService.claimCouponV3(userId, couponId));
 
         // then
         assertThat(throwable)
@@ -186,8 +179,8 @@ class CouponServiceTest {
     @DisplayName("쿠폰 발급 v3 - 중복 발급 시도")
     void claimAlreadyClaimedCoupon() {
         // given
-        AuthUser authUser = new AuthUser(1L, "test@email.com", UserRole.USER);
-        Long couponId = 1L;
+        long userId = 1L;
+        long couponId = 1L;
         Coupon coupon = mock(Coupon.class);
         ReflectionTestUtils.setField(coupon, "id", 1L);
         ReflectionTestUtils.setField(coupon, "amount", 100);
@@ -197,7 +190,7 @@ class CouponServiceTest {
         when(redisTemplate.execute(eq(redisScript), anyList())).thenReturn(-100L);
 
         // when
-        Throwable throwable = catchThrowable(() -> couponService.claimCouponV3(authUser.getId(), couponId));
+        Throwable throwable = catchThrowable(() -> couponService.claimCouponV3(userId, couponId));
 
         // then
         assertThat(throwable)
@@ -209,8 +202,8 @@ class CouponServiceTest {
     @DisplayName("쿠폰 발급 v3 - 수량이 소진된 쿠폰")
     void claimSoldOutCoupon() {
         // given
-        AuthUser authUser = new AuthUser(1L, "test@email.com", UserRole.USER);
-        Long couponId = 1L;
+        long userId = 1L;
+        long couponId = 1L;
         Coupon coupon = mock(Coupon.class);
         ReflectionTestUtils.setField(coupon, "id", 1L);
         ReflectionTestUtils.setField(coupon, "amount", 100);
@@ -220,7 +213,7 @@ class CouponServiceTest {
         when(redisTemplate.execute(eq(redisScript), anyList())).thenReturn(-200L);
 
         // when
-        Throwable throwable = catchThrowable(() -> couponService.claimCouponV3(authUser.getId(), couponId));
+        Throwable throwable = catchThrowable(() -> couponService.claimCouponV3(userId, couponId));
 
         // then
         assertThat(throwable)

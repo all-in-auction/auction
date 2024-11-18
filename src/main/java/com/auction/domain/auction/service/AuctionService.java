@@ -141,7 +141,7 @@ public class AuctionService {
     @DistributedLock(key = "T(java.lang.String).format('Auction%d', #auctionId)")
     @CircuitBreaker(name = "createBidService", fallbackMethod = "createBidFallback")
     public BidCreateResponseDto createBid(Long userId, Long auctionId, BidCreateRequestDto bidCreateRequestDto) {
-        User user = userService.getUser(userId);
+        User user = User.fromUserId(userId);
         Auction auction = getAuctionById(auctionId);
 
         if (Objects.equals(auction.getSeller().getId(), user.getId())) {
