@@ -8,12 +8,10 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class CouponGetResponseDto {
-    private long couponUserId;
     private int discountRate;
 
     public static CouponGetResponseDto from(CouponUserDto couponUserDto) {
         return new CouponGetResponseDto(
-                couponUserDto.getCouponUserId(),
                 couponUserDto.getDiscountRate()
         );
     }
