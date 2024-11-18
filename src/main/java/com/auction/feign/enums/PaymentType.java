@@ -1,9 +1,10 @@
 package com.auction.feign.enums;
 
+import com.auction.common.enums.Describable;
 import lombok.Getter;
 
 @Getter
-public enum PaymentType {
+public enum PaymentType implements Describable {
     CHARGE("충전"),
     SPEND("사용"),
     RECEIVE("지급"),

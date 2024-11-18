@@ -2,12 +2,12 @@ spring:
   datasource:
     master:
       jdbc-url: ${MASTER_DB_URL}
-      username: root
+      username: jwbook            # 수정!
       password: ${MASTER_DB_PW}
       driver-class-name: com.mysql.cj.jdbc.Driver
     slave:
       jdbc-url: ${SLAVE_DB_URL}
-      username: root
+      username: jwbook            # 수정!
       password: ${SLAVE_DB_PW}
       driver-class-name: com.mysql.cj.jdbc.Driver
 

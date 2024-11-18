@@ -3,7 +3,7 @@ package com.auction.domain.auth.service;
 import com.auction.common.apipayload.status.ErrorStatus;
 import com.auction.common.exception.ApiException;
 import com.auction.common.utils.JwtUtil;
-import com.auction.config.PasswordEncoder;
+import com.auction.config.util.PasswordEncoder;
 import com.auction.domain.auth.dto.request.LoginRequestDto;
 import com.auction.domain.auth.dto.request.SignoutRequest;
 import com.auction.domain.auth.dto.request.SignupRequestDto;
@@ -15,7 +15,6 @@ import com.auction.domain.user.repository.UserRepository;
 import com.auction.feign.service.PointService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

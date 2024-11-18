@@ -1,4 +1,4 @@
-package com.auction.config;
+package com.auction.config.util;
 
 import at.favre.lib.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Component;
