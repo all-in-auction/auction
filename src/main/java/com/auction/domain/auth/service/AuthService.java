@@ -52,8 +52,6 @@ public class AuthService {
 
         String bearerToken = jwtUtil.createToken(user.getId(), user.getEmail(), user.getAuthority());
 
-        notificationService.subscribe(user.getId().toString());
-
         return LoginResponseDto.of(bearerToken);
     }
 
