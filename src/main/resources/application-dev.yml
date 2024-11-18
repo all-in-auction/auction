@@ -2,12 +2,12 @@ spring:
   datasource:
     master:
       jdbc-url: ${MASTER_DB_URL}
-      username: jwbook            # 수정!
+      username: root
       password: ${MASTER_DB_PW}
       driver-class-name: com.mysql.cj.jdbc.Driver
     slave:
       jdbc-url: ${SLAVE_DB_URL}
-      username: jwbook            # 수정!
+      username: root
       password: ${SLAVE_DB_PW}
       driver-class-name: com.mysql.cj.jdbc.Driver
 
@@ -67,7 +67,6 @@ server:
   error:
     include-message: always
   port: 0
-#  port: 8080
 
 notification:
   related-url:
