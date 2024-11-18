@@ -14,7 +14,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 //        type = FilterType.ASSIGNABLE_TYPE,
 //        classes = ItemRepository.class))
 @EnableElasticsearchRepositories(basePackages = "com.auction.domain.auction.elasticsearch.repository")
-//@EnableDiscoveryClient
+@EnableDiscoveryClient
 public class AuctionApplication {
 
     public static void main(String[] args) {
