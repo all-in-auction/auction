@@ -19,6 +19,7 @@ public class CouponAdminController {
 
     /**
      * 쿠폰 생성
+     *
      * @param requestDto
      * @return CouponCreateResponseDto
      */

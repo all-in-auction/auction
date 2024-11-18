@@ -1,13 +1,15 @@
 package com.auction.domain.auth.dto.response;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
 public class LoginResponseDto {
 
-    private final String bearerToken;
+    private String bearerToken;
 
     public static LoginResponseDto of(String bearerToken) {
         return new LoginResponseDto(bearerToken);

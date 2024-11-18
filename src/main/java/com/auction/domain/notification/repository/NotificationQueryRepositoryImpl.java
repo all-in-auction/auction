@@ -1,6 +1,6 @@
 package com.auction.domain.notification.repository;
 
-import com.auction.domain.notification.dto.GetNotificationListDto;
+import com.auction.domain.notification.dto.response.GetNotificationResponseDto;
 import com.auction.domain.notification.entity.Notification;
 import com.auction.domain.notification.enums.NotificationType;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -20,7 +20,7 @@ public class NotificationQueryRepositoryImpl implements NotificationQueryReposit
     }
 
     @Override
-    public List<GetNotificationListDto> getNotificationListByUserIdAndType(Long userId, String type) {
+    public List<GetNotificationResponseDto> getNotificationListByUserIdAndType(Long userId, String type) {
         queryFactory.update(notification)
                 .set(notification.isRead, true)
                 .where(userEq(userId), typeEq(type))
@@ -33,7 +33,7 @@ public class NotificationQueryRepositoryImpl implements NotificationQueryReposit
                 .fetch();
 
         return notifications.stream()
-                .map(GetNotificationListDto::from)
+                .map(GetNotificationResponseDto::from)
                 .toList();
     }
 

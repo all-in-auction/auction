@@ -2,20 +2,21 @@ package com.auction.domain.user.dto.response;
 
 import com.auction.domain.user.entity.User;
 import com.auction.domain.user.enums.UserRole;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserResponseDto {
-
-    private final String email;
-    private final String name;
-    private final String nickName;
-    private final int zipCode;
-    private final String address1;
-    private final String address2;
-    private final UserRole authority;
+    private String email;
+    private String name;
+    private String nickName;
+    private int zipCode;
+    private String address1;
+    private String address2;
+    private UserRole authority;
 
     public static UserResponseDto of(User user) {
         return new UserResponseDto(

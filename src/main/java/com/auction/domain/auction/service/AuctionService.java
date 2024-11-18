@@ -18,7 +18,6 @@ import com.auction.domain.auction.entity.Item;
 import com.auction.domain.auction.entity.ItemDocument;
 import com.auction.domain.auction.enums.ItemCategory;
 import com.auction.domain.auction.event.dto.AuctionEvent;
-import com.auction.domain.auction.event.dto.RefundEvent;
 import com.auction.domain.auction.event.publish.AuctionPublisher;
 import com.auction.domain.auction.repository.AuctionRepository;
 import com.auction.domain.auction.repository.ItemRepository;
@@ -35,7 +34,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,10 +57,6 @@ public class AuctionService {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final PointServiceGrpc.PointServiceBlockingStub pointServiceStub;
-    private final KafkaTemplate<String, RefundEvent> kafkaTemplate;
-
-    @Value("${kafka.topic.refund}")
-    private String refundTopic;
 
     @Value("${notification.related-url.auction}")
     private String relatedAuctionUrl;
@@ -210,7 +204,7 @@ public class AuctionService {
                         if (refundUserId != user.getId()) {
                             depositService.deleteDeposit(refundUserId, auctionId);
                             auctionBidGrpcService.increasePoint(refundUserId, price);
-                            auctionBidGrpcService.createPointHistory(refundUserId,price,Point.PaymentType.REFUND);
+                            auctionBidGrpcService.createPointHistory(refundUserId, price, Point.PaymentType.REFUND);
                         }
                     }
                 });
@@ -219,7 +213,7 @@ public class AuctionService {
         redisTemplate.opsForZSet().add(auctionHistoryKey, user.getId().toString(), bidPrice);
         redisTemplate.opsForZSet().incrementScore(AUCTION_RANKING_PREFIX, String.valueOf(auctionId), 1);
 
-        return BidCreateResponseDto.of(user.getId(), auction);
+        return BidCreateResponseDto.from(user.getId(), auction);
     }
 
     @CircuitBreaker(name = "grpcUserPoint", fallbackMethod = "grpcUserPointFallback")

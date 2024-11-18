@@ -2,11 +2,13 @@ package com.auction.domain.coupon.dto;
 
 import com.querydsl.core.annotations.QueryProjection;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
+@NoArgsConstructor
 public class CouponUserDto {
     private long couponUserId;
     private int discountRate;

@@ -17,12 +17,6 @@ public class ElasticsearchConfig {
     @Value("${spring.elasticsearch.uris}")
     String url;
 
-//    @Override
-//    public ClientConfiguration clientConfiguration() {
-//        return ClientConfiguration.builder()
-//                .connectedTo(url)
-//                .build();
-//    }
     @Bean
     public RestHighLevelClient client() {
         String host = extractHost(url);

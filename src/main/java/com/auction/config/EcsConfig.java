@@ -1,8 +1,8 @@
 package com.auction.config;
 
-import lombok.extern.slf4j.Slf4j;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.netflix.eureka.EurekaInstanceConfigBean;
 import org.springframework.context.annotation.Bean;
@@ -20,7 +20,7 @@ import java.net.URL;
 public class EcsConfig {
 
     @Bean
-    public EurekaInstanceConfigBean eurekaInstanceConfig(InetUtils inetUtils){
+    public EurekaInstanceConfigBean eurekaInstanceConfig(InetUtils inetUtils) {
 
         EurekaInstanceConfigBean config = new EurekaInstanceConfigBean(inetUtils);
 
@@ -29,7 +29,7 @@ public class EcsConfig {
         String taskArn = System.getenv("ECS_CONTAINER_METADATA_URI_V4");
         String ip = getPrivateIp(taskArn);
         config.setIpAddress(ip);
-        config.setInstanceId("auction-service:"+ip);
+        config.setInstanceId("auction-service:" + ip);
         config.setNonSecurePort(8080);
 
         return config;
