@@ -1,11 +1,9 @@
 package com.auction.domain.auth.service;
 
-import com.auction.Point;
-import com.auction.PointServiceGrpc;
 import com.auction.common.apipayload.status.ErrorStatus;
-import com.auction.common.entity.AuthUser;
 import com.auction.common.exception.ApiException;
 import com.auction.common.utils.JwtUtil;
+import com.auction.config.PasswordEncoder;
 import com.auction.domain.auth.dto.request.LoginRequestDto;
 import com.auction.domain.auth.dto.request.SignoutRequest;
 import com.auction.domain.auth.dto.request.SignupRequestDto;
@@ -14,7 +12,6 @@ import com.auction.domain.auth.dto.response.SignupResponseDto;
 import com.auction.domain.notification.service.NotificationService;
 import com.auction.domain.user.entity.User;
 import com.auction.domain.user.repository.UserRepository;
-import com.auction.domain.user.service.UserService;
 import com.auction.feign.service.PointService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class AuthService {
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final PointService pointService;
     private final NotificationService notificationService;

@@ -31,7 +31,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: "prometheus,health"
+        include: prometheus,health,resilience4j.circuitbreakers
 
   endpoint:
     health:
@@ -47,6 +47,10 @@ eureka:
   client:
     service-url:
       defaultZone: http://${EUREKA_HOST}:8761/eureka
+
+  instance:
+    instance-id: ${spring.application.name}:${ECS_CONTAINER_METADATA_URI_V4}
+    prefer-ip-address: true
 
 
 logging:

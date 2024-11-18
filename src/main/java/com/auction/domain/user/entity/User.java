@@ -1,6 +1,5 @@
 package com.auction.domain.user.entity;
 
-import com.auction.common.entity.AuthUser;
 import com.auction.common.entity.TimeStamped;
 import com.auction.domain.auth.dto.request.SignupRequestDto;
 import com.auction.domain.user.dto.request.UserUpdateRequestDto;
@@ -105,9 +104,9 @@ public class User extends TimeStamped {
         this.authority = userRole;
     }
 
-    public static User fromAuthUser(AuthUser authUser) {
-        return new User(authUser.getId(), authUser.getEmail(), authUser.getUserRole());
-    }
+//    public static User fromAuthUser(AuthUser authUser) {
+//        return new User(authUser.getId(), authUser.getEmail(), authUser.getUserRole());
+//    }
 
     public static User fromUserId(long userId) {
         return new User(userId);

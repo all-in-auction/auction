@@ -4,10 +4,8 @@ import com.auction.Point;
 import com.auction.PointServiceGrpc;
 import com.auction.common.annotation.DistributedLock;
 import com.auction.common.apipayload.status.ErrorStatus;
-import com.auction.common.entity.AuthUser;
 import com.auction.common.exception.ApiException;
 import com.auction.common.utils.TimeConverter;
-import com.auction.domain.auction.dto.AuctionHistoryDto;
 import com.auction.domain.auction.dto.request.AuctionCreateRequestDto;
 import com.auction.domain.auction.dto.request.AuctionItemChangeRequestDto;
 import com.auction.domain.auction.dto.request.BidCreateRequestDto;
@@ -29,7 +27,7 @@ import com.auction.domain.notification.enums.NotificationType;
 import com.auction.domain.notification.service.NotificationService;
 import com.auction.domain.user.entity.User;
 import com.auction.domain.user.service.UserService;
-import jakarta.ws.rs.HEAD;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -147,6 +145,7 @@ public class AuctionService {
     }
 
     @DistributedLock(key = "T(java.lang.String).format('Auction%d', #auctionId)")
+    @CircuitBreaker(name = "createBidService", fallbackMethod = "createBidFallback")
     public BidCreateResponseDto createBid(Long userId, Long auctionId, BidCreateRequestDto bidCreateRequestDto) {
         User user = userService.getUser(userId);
         Auction auction = getAuctionById(auctionId);
@@ -223,7 +222,66 @@ public class AuctionService {
         return BidCreateResponseDto.of(user.getId(), auction);
     }
 
+    @CircuitBreaker(name = "grpcUserPoint", fallbackMethod = "grpcUserPointFallback")
+    public int grpcUserPoint(long userId) {
+        try {
+            Point.GetPointsRequest grpcRequest = Point.GetPointsRequest.newBuilder()
+                    .setUserId(userId)
+                    .build();
+
+            Point.GetPointsResponse pointAmount = pointServiceStub.getPoints(grpcRequest);
+
+            return pointAmount.getTotalPoint();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new ApiException(ErrorStatus._INVALID_REQUEST);
+        }
+    }
+
+    @CircuitBreaker(name = "grpcDecreasePoint", fallbackMethod = "grpcDecreasePointFallback")
+    public void grpcDecreasePoint(long userId, int amount) {
+        try {
+            Point.DecreasePointsRequest grpcRequest = Point.DecreasePointsRequest.newBuilder()
+                    .setUserId(userId)
+                    .setAmount(amount)
+                    .build();
+
+            Point.DecreasePointsResponse grpcResponse = pointServiceStub.decreasePoints(grpcRequest);
+
+            if (grpcResponse.getStatus().equalsIgnoreCase("FAILED")) {
+                throw new ApiException(ErrorStatus._INVALID_REQUEST);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new ApiException(ErrorStatus._INVALID_REQUEST);
+        }
+    }
+
+    @CircuitBreaker(name = "createPointHistory", fallbackMethod = "createPointHistoryFallback")
+    public void createPointHistory(long userId, int amount, Point.PaymentType paymentType) {
+        try {
+            Point.CreatePointHistoryRequest grpcRequest = Point.CreatePointHistoryRequest.newBuilder()
+                    .setUserId(userId)
+                    .setAmount(amount)
+                    .setPaymentType(paymentType)
+                    .build();
+
+            Point.CreatePointHistoryResponse grpcResponse = pointServiceStub.createPointHistory(grpcRequest);
+
+            if (grpcResponse.getStatus().equalsIgnoreCase("FAIL")) {
+                throw new ApiException(ErrorStatus._INVALID_REQUEST);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new ApiException(ErrorStatus._INVALID_REQUEST);
+        }
+    }
+
     @Transactional
+    @CircuitBreaker(name = "closeAuction", fallbackMethod = "closeAuctionFallback")
     public void closeAuction(AuctionEvent auctionEvent) {
         long auctionId = auctionEvent.getAuctionId();
         Auction auction = getAuctionById(auctionId);

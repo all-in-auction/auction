@@ -2,7 +2,6 @@ package com.auction.domain.coupon.service;
 
 import com.auction.common.annotation.DistributedLock;
 import com.auction.common.apipayload.status.ErrorStatus;
-import com.auction.common.entity.AuthUser;
 import com.auction.common.exception.ApiException;
 import com.auction.domain.coupon.dto.CouponClaimMessage;
 import com.auction.domain.coupon.dto.request.CouponCreateRequestDto;

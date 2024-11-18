@@ -1,8 +1,8 @@
 package com.auction.domain.user.service;
 
 import com.auction.common.apipayload.status.ErrorStatus;
-import com.auction.common.entity.AuthUser;
 import com.auction.common.exception.ApiException;
+import com.auction.config.PasswordEncoder;
 import com.auction.domain.auction.dto.response.ItemResponseDto;
 import com.auction.domain.auction.entity.Item;
 import com.auction.domain.auction.repository.AuctionRepository;
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 public class UserService {
     private final UserRepository userRepository;
     private final AuthService authService;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
     private final AuctionRepository auctionRepository;
     private final ItemRepository itemRepository;
 
