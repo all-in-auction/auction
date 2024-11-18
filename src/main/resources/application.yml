@@ -48,7 +48,6 @@ eureka:
     service-url:
       defaultZone: http://${EUREKA_HOST}:8761/eureka
 
-
 logging:
   level:
     com.zaxxer.hikari.HikariConfig: DEBUG
