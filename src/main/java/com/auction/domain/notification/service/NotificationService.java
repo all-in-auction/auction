@@ -1,6 +1,5 @@
 package com.auction.domain.notification.service;
 
-import com.auction.common.entity.AuthUser;
 import com.auction.domain.notification.dto.GetNotificationListDto;
 import com.auction.domain.notification.dto.NotificationDto;
 import com.auction.domain.notification.entity.Notification;

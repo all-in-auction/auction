@@ -3,7 +3,6 @@ package com.auction.domain.auction.service;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.auction.common.apipayload.status.ErrorStatus;
-import com.auction.common.entity.AuthUser;
 import com.auction.common.exception.ApiException;
 import com.auction.domain.auction.dto.response.AuctionItemImageResponseDto;
 import com.auction.domain.auction.entity.Auction;

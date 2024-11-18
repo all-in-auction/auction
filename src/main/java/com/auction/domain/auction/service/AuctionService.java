@@ -4,7 +4,6 @@ import com.auction.Point;
 import com.auction.PointServiceGrpc;
 import com.auction.common.annotation.DistributedLock;
 import com.auction.common.apipayload.status.ErrorStatus;
-import com.auction.common.entity.AuthUser;
 import com.auction.common.exception.ApiException;
 import com.auction.common.utils.TimeConverter;
 import com.auction.domain.auction.dto.AuctionHistoryDto;

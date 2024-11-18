@@ -1,7 +1,6 @@
 package com.auction.domain.review.service;
 
 import com.auction.common.apipayload.status.ErrorStatus;
-import com.auction.common.entity.AuthUser;
 import com.auction.common.exception.ApiException;
 import com.auction.domain.auction.entity.Auction;
 import com.auction.domain.auction.repository.AuctionRepository;

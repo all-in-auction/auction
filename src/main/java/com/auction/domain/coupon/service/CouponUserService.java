@@ -1,7 +1,6 @@
 package com.auction.domain.coupon.service;
 
 import com.auction.common.apipayload.status.ErrorStatus;
-import com.auction.common.entity.AuthUser;
 import com.auction.common.exception.ApiException;
 import com.auction.domain.coupon.dto.CouponUserDto;
 import com.auction.domain.coupon.dto.request.CouponUseRequestDto;
@@ -41,17 +40,17 @@ public class CouponUserService {
         return CouponGetResponseDto.from(couponUserDto);
     }
 
-    public int getDiscountedAmount(AuthUser authUser, int amount, long couponId) {
-        Coupon coupon = couponSubService.getCoupon(couponId);
-
-        CouponUser couponUser = getCouponUser(User.fromAuthUser(authUser), coupon);
-
-        if (!couponUser.isAvailable()) {
-            throw new ApiException(ErrorStatus._ALREADY_USED_COUPON);
-        }
-
-        return amount * (100 - coupon.getDiscountRate()) / 100;
-    }
+//    public int getDiscountedAmount(AuthUser authUser, int amount, long couponId) {
+//        Coupon coupon = couponSubService.getCoupon(couponId);
+//
+//        CouponUser couponUser = getCouponUser(User.fromAuthUser(authUser), coupon);
+//
+//        if (!couponUser.isAvailable()) {
+//            throw new ApiException(ErrorStatus._ALREADY_USED_COUPON);
+//        }
+//
+//        return amount * (100 - coupon.getDiscountRate()) / 100;
+//    }
 
     public CouponUser getCouponUser(User user, Coupon coupon) {
         return couponUserRepository.findByUserAndCoupon(user, coupon)

@@ -1,6 +1,5 @@
 package com.auction.common.aop;
 
-import com.auction.common.entity.AuthUser;
 import com.auction.common.exception.ApiException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,8 +11,6 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -58,12 +55,12 @@ public class LoggingAspect {
     private RequestLogDto setRequestLogDto() {
         RequestLogDto requestLogDto = RequestLogDto.of(request.getRequestURL().toString(), request.getMethod(), null, null);
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication != null && authentication.isAuthenticated()) {
-            AuthUser authUser = (AuthUser) authentication.getPrincipal();
-            requestLogDto.changeRequestUserId(authUser.getId());
-        }
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//
+//        if (authentication != null && authentication.isAuthenticated()) {
+//            AuthUser authUser = (AuthUser) authentication.getPrincipal();
+//            requestLogDto.changeRequestUserId(authUser.getId());
+//        }
 
         return requestLogDto;
     }
