@@ -2,7 +2,7 @@ package com.auction.domain.user.enums;
 
 import com.auction.common.enums.Describable;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+
 import java.util.Arrays;
 
 @Getter

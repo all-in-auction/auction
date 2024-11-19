@@ -2,25 +2,27 @@ package com.auction.domain.auction.dto.response;
 
 import com.auction.domain.auction.entity.Auction;
 import com.auction.domain.auction.enums.ItemCategory;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Getter
-@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
 public class BidCreateResponseDto {
-    private final long auctionId;
-    private final long userId;
-    private final String name;
-    private final ItemCategory category;
-    private final String description;
-    private final LocalDateTime expireAt;
-    private final int minPrice;
-    private final int maxPrice;
-    private final boolean isAutoExtension;
+    private long auctionId;
+    private long userId;
+    private String name;
+    private ItemCategory category;
+    private String description;
+    private LocalDateTime expireAt;
+    private int minPrice;
+    private int maxPrice;
+    private boolean isAutoExtension;
 
-    public static BidCreateResponseDto of(long userId, Auction auction) {
+    public static BidCreateResponseDto from(long userId, Auction auction) {
         return new BidCreateResponseDto(
                 auction.getId(),
                 userId,

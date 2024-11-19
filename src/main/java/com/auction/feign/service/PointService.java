@@ -12,7 +12,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import static com.auction.common.constants.Const.USER_ID;
 
 @FeignClient(
-        name = "points-service"
+        name = "points-service",
+        configuration = FeignConfig.class
 )
 public interface PointService {
     @PostMapping("/api/internal/v4/points")

@@ -14,15 +14,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class CouponUserService {
     private final CouponUserRepository couponUserRepository;
-
-    private final CouponSubService couponSubService;
 
     @Transactional(readOnly = true)
     public CouponGetResponseDto getValidCoupon(long userId, long couponUserId) {
@@ -38,23 +35,6 @@ public class CouponUserService {
         }
 
         return CouponGetResponseDto.from(couponUserDto);
-    }
-
-//    public int getDiscountedAmount(AuthUser authUser, int amount, long couponId) {
-//        Coupon coupon = couponSubService.getCoupon(couponId);
-//
-//        CouponUser couponUser = getCouponUser(User.fromAuthUser(authUser), coupon);
-//
-//        if (!couponUser.isAvailable()) {
-//            throw new ApiException(ErrorStatus._ALREADY_USED_COUPON);
-//        }
-//
-//        return amount * (100 - coupon.getDiscountRate()) / 100;
-//    }
-
-    public CouponUser getCouponUser(User user, Coupon coupon) {
-        return couponUserRepository.findByUserAndCoupon(user, coupon)
-                .orElseThrow(() -> new ApiException(ErrorStatus._NOT_OWNED_COUPON));
     }
 
     @Transactional

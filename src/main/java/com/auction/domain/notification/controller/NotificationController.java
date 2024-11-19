@@ -1,7 +1,7 @@
 package com.auction.domain.notification.controller;
 
 import com.auction.common.apipayload.ApiResponse;
-import com.auction.domain.notification.dto.GetNotificationListDto;
+import com.auction.domain.notification.dto.response.GetNotificationResponseDto;
 import com.auction.domain.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -37,8 +37,8 @@ public class NotificationController {
     }
 
     @GetMapping
-    public ApiResponse<List<GetNotificationListDto>> getNotificationList(@RequestHeader(USER_ID) long userId,
-                                                                         @RequestParam(required = false) String type) {
+    public ApiResponse<List<GetNotificationResponseDto>> getNotificationList(@RequestHeader(USER_ID) long userId,
+                                                                             @RequestParam(required = false) String type) {
         return ApiResponse.ok(notificationService.getNotificationList(userId, type));
     }
 }

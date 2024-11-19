@@ -1,7 +1,7 @@
 package com.auction.domain.notification.service;
 
-import com.auction.domain.notification.dto.GetNotificationListDto;
 import com.auction.domain.notification.dto.NotificationDto;
+import com.auction.domain.notification.dto.response.GetNotificationResponseDto;
 import com.auction.domain.notification.entity.Notification;
 import com.auction.domain.notification.enums.NotificationType;
 import com.auction.domain.notification.repository.NotificationRepository;
@@ -74,7 +74,7 @@ public class NotificationService {
     }
 
     @Transactional
-    public List<GetNotificationListDto> getNotificationList(Long userId, String type) {
+    public List<GetNotificationResponseDto> getNotificationList(Long userId, String type) {
         return notificationRepository.getNotificationListByUserIdAndType(userId, type);
     }
 }

@@ -4,6 +4,7 @@ import com.auction.common.exception.ApiException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.util.Strings;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.AfterThrowing;
@@ -14,6 +15,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
+
+import static com.auction.common.constants.Const.USER_ID;
 
 @Aspect
 @Component
@@ -55,12 +58,10 @@ public class LoggingAspect {
     private RequestLogDto setRequestLogDto() {
         RequestLogDto requestLogDto = RequestLogDto.of(request.getRequestURL().toString(), request.getMethod(), null, null);
 
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//
-//        if (authentication != null && authentication.isAuthenticated()) {
-//            AuthUser authUser = (AuthUser) authentication.getPrincipal();
-//            requestLogDto.changeRequestUserId(authUser.getId());
-//        }
+        String userId = request.getHeader(USER_ID);
+        if (Strings.isNotBlank(userId)) {
+            requestLogDto.changeRequestUserId(Long.parseLong(userId));
+        }
 
         return requestLogDto;
     }

@@ -1,12 +1,13 @@
 package com.auction.domain.coupon.dto.response;
 
 import com.auction.domain.coupon.dto.CouponUserDto;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor
+@AllArgsConstructor
 public class CouponGetResponseDto {
     private int discountRate;
 

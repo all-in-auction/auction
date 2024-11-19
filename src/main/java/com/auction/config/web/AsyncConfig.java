@@ -11,7 +11,7 @@ import java.util.concurrent.Executor;
 @EnableAsync
 @Configuration
 public class AsyncConfig implements AsyncConfigurer {
-    private static final int CORE_POOL_SIZE= 4;
+    private static final int CORE_POOL_SIZE = 4;
     private static final int MAX_POOL_SIZE = 20;
     private static final int QUEUE_CAPACITY = 100;
     private static final String THREAD_NAME_PREFIX = "ElasticSearch-";

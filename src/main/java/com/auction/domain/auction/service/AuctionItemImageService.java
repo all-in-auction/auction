@@ -46,7 +46,7 @@ public class AuctionItemImageService {
         User user = userService.getUser(userId);
         Auction auction = getAuctionItemWithUser(user, auctionId);
 
-        List<AuctionItemImageResponseDto> responseDtos = new ArrayList<>();
+        List<AuctionItemImageResponseDto> responseDtoList = new ArrayList<>();
         List<String> supportedFileTypes = List.of("image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf");
 
         for (MultipartFile file : files) {
@@ -70,9 +70,9 @@ public class AuctionItemImageService {
 
             AuctionItemImage image = AuctionItemImage.of(path, fileName, originName, extension, auction.getItem());
             AuctionItemImage savedImg = auctionItemImageRepository.save(image);
-            responseDtos.add(AuctionItemImageResponseDto.from(savedImg));
+            responseDtoList.add(AuctionItemImageResponseDto.from(savedImg));
         }
-        return responseDtos;
+        return responseDtoList;
     }
 
     @Transactional

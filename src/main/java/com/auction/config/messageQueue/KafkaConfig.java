@@ -1,6 +1,5 @@
 package com.auction.config.messageQueue;
 
-import com.auction.domain.auction.event.dto.RefundEvent;
 import com.auction.domain.coupon.dto.CouponClaimMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -59,15 +58,6 @@ public class KafkaConfig {
         return kafkaTemplate;
     }
 
-    // 환불용 KafkaTemplate 빈 정의
-    @Bean
-    public KafkaTemplate<String, RefundEvent> refundKafkaTemplate() {
-        KafkaTemplate<String, RefundEvent> kafkaTemplate = createKafkaTemplate(RefundEvent.class);
-        kafkaTemplate.setTransactionIdPrefix("refund-");    // 트랜잭션 id 접두사 설정
-        return kafkaTemplate;
-    }
-
-
     // 공통 ConsumerFactory
     private <T> ConsumerFactory<String, T> createConsumerFactory(String groupId, Class<T> valueType) {
         Map<String, Object> configProps = new HashMap<>();
@@ -94,30 +84,21 @@ public class KafkaConfig {
     // 쿠폰용 KafkaListenerContainerFactory 빈 정의
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, CouponClaimMessage> kafkaListenerContainerFactory() {
-        return createKafkaListenerContainerFactory(createConsumerFactory("couponGroup", CouponClaimMessage.class));
-    }
-
-    // 환불용 KafkaListenerContainerFactory 빈 정의
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, RefundEvent> refundKafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, RefundEvent> factory =  createKafkaListenerContainerFactory(createConsumerFactory("refundGroup", RefundEvent.class));
-        factory.setCommonErrorHandler(refundErrorHandler());
+        ConcurrentKafkaListenerContainerFactory<String, CouponClaimMessage> factory = createKafkaListenerContainerFactory(createConsumerFactory("couponGroup", CouponClaimMessage.class));
+        factory.setCommonErrorHandler(errorHandler());
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
-
         return factory;
     }
 
     @Bean
     // Consumer 로직에서 예외 발생 시 재시도 로직 ErrorHandler
-    public DefaultErrorHandler refundErrorHandler() {
-        DefaultErrorHandler errorHandler = new DefaultErrorHandler((consumerRecord, exception) -> {
+    public DefaultErrorHandler errorHandler() {
+        return new DefaultErrorHandler((consumerRecord, exception) -> {
             log.error("[Error] topic = {}, key = {}, value = {}, error message = {}",
                     consumerRecord.topic(),
                     consumerRecord.key(),
                     consumerRecord.value(),
                     exception.getMessage());
         }, new FixedBackOff(1000L, 10)); // 1초 간격으로 최대 10번 재시도
-
-        return errorHandler;
     }
 }

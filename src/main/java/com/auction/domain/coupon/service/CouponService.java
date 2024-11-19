@@ -64,8 +64,7 @@ public class CouponService {
             throw new ApiException(ErrorStatus._SOLD_OUT_COUPON);
         }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ApiException(ErrorStatus._NOT_FOUND_USER));
+        User user = User.fromUserId(userId);
 
         // 쿠폰 중복 발급 불가
         couponUserRepository.findByUserAndCoupon(user, coupon).ifPresent(t -> {
@@ -103,7 +102,7 @@ public class CouponService {
         if (result == -200) throw new ApiException(ErrorStatus._SOLD_OUT_COUPON);
 
         // kafka 메세지 발행
-        CouponClaimMessage message = new CouponClaimMessage(userId, couponId);
+        CouponClaimMessage message = CouponClaimMessage.of(userId, couponId);
         kafkaTemplate.send(couponTopic, message);
 
         return CouponClaimResponseDto.from(coupon);

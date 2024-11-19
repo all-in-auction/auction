@@ -7,6 +7,7 @@ import com.auction.common.apipayload.status.ErrorStatus;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.FeignException;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -26,13 +27,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
 
-//    @ExceptionHandler(AuthenticationException.class)
-//    public ResponseEntity<ApiResponse<String>> handleAuthenticationException(AuthenticationException e) {
-//        return ResponseEntity.status(ErrorStatus._NOT_AUTHENTICATIONPRINCIPAL_USER.getHttpStatus())
-//                .body(ApiResponse.fail(ErrorStatus._NOT_AUTHENTICATIONPRINCIPAL_USER));
-//    }
-
-
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ApiResponse<String>> handleCustomException(ApiException e) {
         BaseCode errorCode = e.getErrorCode();
@@ -48,7 +42,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<String>> handleBindException(MethodArgumentNotValidException ex) {
         String errorCodes = ex.getBindingResult().getAllErrors()
                 .stream()
-                .map(error -> error.getDefaultMessage())
+                .map(DefaultMessageSourceResolvable::getDefaultMessage)
                 .collect(Collectors.joining(","));
 
         return ResponseEntity

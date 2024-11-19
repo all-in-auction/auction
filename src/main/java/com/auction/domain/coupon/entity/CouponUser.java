@@ -40,12 +40,6 @@ public class CouponUser extends TimeStamped {
     @Column(name = "is_available")
     private boolean isAvailable = true;
 
-    public void useCoupon(long pointHistoryId) {
-        this.pointHistoryId = pointHistoryId;
-        this.isAvailable = false;
-        this.usedAt = LocalDateTime.now();
-    }
-
     private CouponUser(Coupon coupon, User user) {
         this.coupon = coupon;
         this.user = user;

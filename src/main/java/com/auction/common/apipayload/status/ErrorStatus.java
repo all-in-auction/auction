@@ -18,7 +18,7 @@ public enum ErrorStatus implements BaseCode {
     _TIMEOUT(HttpStatus.REQUEST_TIMEOUT, "408", "잠시 후 다시 시도해주세요."),
     _INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "500", "요청에 실패하였습니다."),
 
-    //Auth
+    // auth
     _NOT_AUTHENTICATIONPRINCIPAL_USER(HttpStatus.UNAUTHORIZED, "401", "인증되지 않은 유저입니다."),
     _NOT_FOUND_USER(HttpStatus.NOT_FOUND, "404", "권한이 없습니다."),
 

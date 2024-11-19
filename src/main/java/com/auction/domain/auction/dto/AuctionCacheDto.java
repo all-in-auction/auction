@@ -1,11 +1,13 @@
-package com.auction.domain.auction.dto.request;
+package com.auction.domain.auction.dto;
 
 import com.auction.domain.auction.entity.Auction;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class AuctionCacheDto {
     private Long id;
     private String itemName;

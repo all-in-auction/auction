@@ -28,14 +28,6 @@ public class AuctionPublisher {
         }
     }
 
-    public void refundPublisher(Object object) {
-        try {
-            rabbitTemplate.convertAndSend("exchange.refund", "refund.*", objectMapper.writeValueAsString(object));
-        } catch (JsonProcessingException e) {
-            throw new ApiException(ErrorStatus._INVALID_REQUEST);
-        }
-    }
-
     private long subtractTime(long millis1, long millis2) {
         return Math.abs(millis1 - millis2);
     }

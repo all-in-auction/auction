@@ -1,4 +1,4 @@
-package com.auction.domain.notification.dto;
+package com.auction.domain.notification.dto.response;
 
 import com.auction.domain.notification.entity.Notification;
 import com.auction.domain.notification.enums.NotificationType;
@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class GetNotificationListDto {
+public class GetNotificationResponseDto {
 
     private String content;
     private String relatedUrl;
@@ -27,8 +27,8 @@ public class GetNotificationListDto {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
-    public static GetNotificationListDto from(Notification notification) {
-        return new GetNotificationListDto(notification.getContent(), notification.getRelatedUrl(),
+    public static GetNotificationResponseDto from(Notification notification) {
+        return new GetNotificationResponseDto(notification.getContent(), notification.getRelatedUrl(),
                 notification.isRead(),notification.getType(), notification.getCreatedAt());
     }
 }

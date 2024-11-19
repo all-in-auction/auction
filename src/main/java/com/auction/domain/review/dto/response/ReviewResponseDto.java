@@ -1,16 +1,17 @@
 package com.auction.domain.review.dto.response;
 
 import com.auction.domain.review.entity.Review;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
 public class ReviewResponseDto {
-
-    private final String title;
-    private final String content;
-    private final int star;
+    private String title;
+    private String content;
+    private int star;
 
     public static ReviewResponseDto of(Review review) {
         return new ReviewResponseDto(
