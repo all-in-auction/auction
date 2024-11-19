@@ -1,7 +1,7 @@
 package com.auction.feign.service;
 
 import com.auction.common.apipayload.ApiResponse;
-import com.auction.config.FeignConfig;
+import com.auction.config.web.FeignConfig;
 import com.auction.feign.dto.request.PointChangeRequestDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PatchMapping;

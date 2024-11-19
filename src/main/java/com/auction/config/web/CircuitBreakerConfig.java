@@ -1,4 +1,4 @@
-package com.auction.config;
+package com.auction.config.web;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import org.springframework.context.annotation.Bean;

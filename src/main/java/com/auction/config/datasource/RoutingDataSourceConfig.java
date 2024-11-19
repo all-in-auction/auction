@@ -1,4 +1,4 @@
-package com.auction.config;
+package com.auction.config.datasource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;

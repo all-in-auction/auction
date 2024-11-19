@@ -1,4 +1,4 @@
-package com.auction.config;
+package com.auction.config.web;
 
 import lombok.extern.slf4j.Slf4j;
 import com.fasterxml.jackson.databind.JsonNode;

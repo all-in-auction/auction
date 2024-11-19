@@ -1,4 +1,4 @@
-package com.auction.config;
+package com.auction.config.messageQueue;
 
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
