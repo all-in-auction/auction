@@ -1,5 +1,6 @@
 package com.auction.domain.review.entity;
 
+import com.auction.common.entity.TimeStamped;
 import com.auction.domain.auction.entity.Auction;
 import com.auction.domain.review.dto.request.ReviewCreateRequestDto;
 import com.auction.domain.review.dto.request.ReviewUpdateRequestDto;
@@ -14,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "review")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Review {
+public class Review extends TimeStamped {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

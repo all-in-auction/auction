@@ -1,4 +1,4 @@
-package com.auction.config;
+package com.auction.config.web;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.CacheControl;

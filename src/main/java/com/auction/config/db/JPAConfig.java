@@ -1,4 +1,4 @@
-package com.auction.config;
+package com.auction.config.db;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;

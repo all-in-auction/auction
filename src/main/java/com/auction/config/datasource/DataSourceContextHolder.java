@@ -1,4 +1,4 @@
-package com.auction.config;
+package com.auction.config.datasource;
 
 public class DataSourceContextHolder {
 

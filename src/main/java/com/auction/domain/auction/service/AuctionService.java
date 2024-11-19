@@ -144,6 +144,36 @@ public class AuctionService {
         User user = User.fromUserId(userId);
         Auction auction = getAuctionById(auctionId);
 
+        validateBidRequest(user, auction);
+
+        String auctionHistoryKey = AUCTION_HISTORY_PREFIX + auction.getId();
+
+        // 입찰가 변환 : ex) 15999 -> 15000
+        int bidPrice = adjustBidPrice(bidCreateRequestDto.getPrice());
+        validBidPrice(bidPrice, auction, auctionHistoryKey);
+
+        int pointAmount = auctionBidGrpcService.grpcUserPoint(user.getId());
+        validatePointBalance(pointAmount, bidPrice);
+
+        // 마감 5분 전인지 확인하고, 자동연장
+        handleAutoExtension(auction);
+
+        auction.changeMaxPrice(bidPrice);
+        auctionRepository.save(auction);
+
+        // 포인트 차감, 보증금 예치
+        handleDepositAndPoint(user, auctionId, bidPrice);
+
+        // reids zset 에서 이전 최고 입찰 구매자 보증금 환불
+        refundPreviousBidder(auctionHistoryKey, user.getId(), auctionId);
+
+        // redis zset 에 입찰 기록 저장
+        updateRedis(auctionHistoryKey, user.getId(), bidPrice, auctionId);
+
+        return BidCreateResponseDto.from(user.getId(), auction);
+    }
+
+    private void validateBidRequest(User user, Auction auction) {
         if (Objects.equals(auction.getSeller().getId(), user.getId())) {
             throw new ApiException(ErrorStatus._INVALID_BID_REQUEST_USER);
         }
@@ -151,32 +181,28 @@ public class AuctionService {
         if (auction.getExpireAt().isBefore(LocalDateTime.now())) {
             throw new ApiException(ErrorStatus._INVALID_BID_CLOSED_AUCTION);
         }
+    }
 
-        String auctionHistoryKey = AUCTION_HISTORY_PREFIX + auction.getId();
+    private int adjustBidPrice(int price) {
+        return (price / 1000) * 1000;
+    }
 
-        // 입찰가 변환 : ex) 15999 -> 15000
-        int bidPrice = (bidCreateRequestDto.getPrice() / 1000) * 1000;
-        validBidPrice(bidPrice, auction, auctionHistoryKey);
-
-        // TODO : gRPC 변환
-        int pointAmount = auctionBidGrpcService.grpcUserPoint(user.getId());
-
+    private void validatePointBalance(int pointAmount, int bidPrice) {
         if (pointAmount < bidPrice) {
             throw new ApiException(ErrorStatus._INVALID_NOT_ENOUGH_POINT);
         }
+    }
 
+    private void handleAutoExtension(Auction auction) {
         LocalDateTime now = LocalDateTime.now();
-
         boolean isAutoExtensionNow = auction.getExpireAt().minusMinutes(5L).isBefore(now);
-        // 마감 5분 전인지 확인하고, 자동연장
+
         if (auction.isAutoExtension() && isAutoExtensionNow) {
             auction.changeExpireAt(auction.getExpireAt().plusMinutes(10L));
         }
+    }
 
-        auction.changeMaxPrice(bidPrice);
-        auctionRepository.save(auction);
-
-        // 포인트 차감, 보증금 예치
+    private void handleDepositAndPoint(User user, Long auctionId, int bidPrice) {
         depositService.getDeposit(user.getId(), auctionId).ifPresentOrElse(
                 (deposit) -> {
                     int prevDeposit = Integer.parseInt(deposit.toString());
@@ -191,8 +217,9 @@ public class AuctionService {
                 }
         );
         depositService.placeDeposit(user.getId(), auctionId, bidPrice);
+    }
 
-        // reids zset 에서 이전 최고 입찰 구매자 보증금 환불
+    private void refundPreviousBidder(String auctionHistoryKey, Long currentUserId, Long auctionId) {
         Set<ZSetOperations.TypedTuple<Object>> typedTuples =
                 redisTemplate.opsForZSet().reverseRangeWithScores(auctionHistoryKey, 0, 0);
         Optional.ofNullable(typedTuples)
@@ -201,19 +228,18 @@ public class AuctionService {
                     for (ZSetOperations.TypedTuple<Object> tuple : tuples) {
                         long refundUserId = Long.parseLong(String.valueOf(tuple.getValue()));
                         int price = Objects.requireNonNull(tuple.getScore()).intValue();
-                        if (refundUserId != user.getId()) {
+                        if (refundUserId != currentUserId) {
                             depositService.deleteDeposit(refundUserId, auctionId);
                             auctionBidGrpcService.increasePoint(refundUserId, price);
                             auctionBidGrpcService.createPointHistory(refundUserId, price, Point.PaymentType.REFUND);
                         }
                     }
                 });
+    }
 
-        // redis zset 에 입찰 기록 저장
-        redisTemplate.opsForZSet().add(auctionHistoryKey, user.getId().toString(), bidPrice);
+    private void updateRedis(String auctionHistoryKey, Long userId, int bidPrice, Long auctionId) {
+        redisTemplate.opsForZSet().add(auctionHistoryKey, userId.toString(), bidPrice);
         redisTemplate.opsForZSet().incrementScore(AUCTION_RANKING_PREFIX, String.valueOf(auctionId), 1);
-
-        return BidCreateResponseDto.from(user.getId(), auction);
     }
 
     @CircuitBreaker(name = "grpcUserPoint", fallbackMethod = "grpcUserPointFallback")
@@ -293,38 +319,54 @@ public class AuctionService {
         }
 
         // redis key 삭제
-        redisTemplate.delete(auctionHistoryKey);
-        redisTemplate.opsForZSet().remove(AUCTION_RANKING_PREFIX, String.valueOf(auctionId));
+        removeAuctionFromRedis(auctionHistoryKey, auctionId);
 
-        Set<Object> result = redisTemplate.opsForZSet().reverseRange(auctionHistoryKey, 0, 0);
-        if (result == null || result.isEmpty()) {
+        Set<Object> topBidder = redisTemplate.opsForZSet().reverseRange(auctionHistoryKey, 0, 0);
+        if (isAuctionFailed(topBidder)) {
             // 경매 유찰 알림
-            notificationService.sendNotification(auction.getSeller(), NotificationType.AUCTION,
-                    "경매 아이디 " + auctionId + "이(가) 유찰되었습니다.", relatedAuctionUrl + auctionId);
+            notifyAuctionFailure(auction, auctionId);
         } else {
             // 경매 낙찰
-            // 판매자 포인트 증가
-            auctionBidGrpcService.increasePoint(auction.getSeller().getId(), auction.getMaxPrice());
-            auctionBidGrpcService.createPointHistory(auction.getSeller().getId(), auction.getMaxPrice(), Point.PaymentType.RECEIVE);
+            processAuctionSuccess(auction, topBidder, auctionId);
+        }
+    }
+
+    private void removeAuctionFromRedis(String auctionHistoryKey, long auctionId) {
+        redisTemplate.delete(auctionHistoryKey);
+        redisTemplate.opsForZSet().remove(AUCTION_RANKING_PREFIX, String.valueOf(auctionId));
+    }
+
+    private boolean isAuctionFailed(Set<Object> bidder) {
+        return bidder == null || bidder.isEmpty();
+    }
+
+    private void notifyAuctionFailure(Auction auction, long auctionId) {
+        notificationService.sendNotification(auction.getSeller(), NotificationType.AUCTION,
+                "경매 아이디 " + auctionId + "이(가) 유찰되었습니다.", relatedAuctionUrl + auctionId);
+    }
+
+    private void processAuctionSuccess(Auction auction, Set<Object> topBidder, long auctionId) {
+        // 판매자 포인트 증가
+        auctionBidGrpcService.increasePoint(auction.getSeller().getId(), auction.getMaxPrice());
+        auctionBidGrpcService.createPointHistory(auction.getSeller().getId(), auction.getMaxPrice(), Point.PaymentType.RECEIVE);
 //            pointService.increasePoint(auction.getSeller().getId(), auction.getMaxPrice());
 //            pointHistoryService.createPointHistory(auction.getSeller(), auction.getMaxPrice(), PaymentType.RECEIVE);
 
-            // 구매자 경매 이력 수정
-            String buyerId = (String) result.iterator().next();
-            User buyer = userService.getUser(Long.parseLong(buyerId));
+        // 구매자 경매 이력 수정
+        String buyerId = (String) topBidder.iterator().next();
+        User buyer = userService.getUser(Long.parseLong(buyerId));
 
-            auction.changeBuyer(buyer);
+        auction.changeBuyer(buyer);
 
-            // 보증금 제거
-            depositService.deleteDeposit(buyer.getId(), auctionId);
-            log.debug("topBidUser : {}", buyer.getId());
+        // 보증금 제거
+        depositService.deleteDeposit(buyer.getId(), auctionId);
+        log.debug("topBidUser : {}", buyer.getId());
 
-            // 경매 낙찰 알림
-            notificationService.sendNotification(buyer,
-                    NotificationType.AUCTION,
-                    "입찰한 " + auction.getItem().getName() + "이(가) 낙찰되었습니다!",
-                    relatedAuctionUrl + auctionId);
-        }
+        // 경매 낙찰 알림
+        notificationService.sendNotification(buyer,
+                NotificationType.AUCTION,
+                "입찰한 " + auction.getItem().getName() + "이(가) 낙찰되었습니다!",
+                relatedAuctionUrl + auctionId);
     }
 
     @Transactional(readOnly = true)

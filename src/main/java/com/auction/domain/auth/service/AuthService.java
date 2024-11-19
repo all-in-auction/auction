@@ -3,7 +3,7 @@ package com.auction.domain.auth.service;
 import com.auction.common.apipayload.status.ErrorStatus;
 import com.auction.common.exception.ApiException;
 import com.auction.common.utils.JwtUtil;
-import com.auction.config.PasswordEncoder;
+import com.auction.config.util.PasswordEncoder;
 import com.auction.domain.auth.dto.request.LoginRequestDto;
 import com.auction.domain.auth.dto.request.SignoutRequest;
 import com.auction.domain.auth.dto.request.SignupRequestDto;

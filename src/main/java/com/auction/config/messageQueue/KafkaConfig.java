@@ -1,4 +1,4 @@
-package com.auction.config;
+package com.auction.config.messageQueue;
 
 import com.auction.domain.coupon.dto.CouponClaimMessage;
 import lombok.extern.slf4j.Slf4j;

@@ -1,4 +1,4 @@
-package com.auction.config;
+package com.auction.config.web;
 
 import com.auction.feign.decoder.ApiErrorDecoder;
 import feign.Client;

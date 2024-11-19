@@ -4,7 +4,6 @@ import com.auction.domain.auction.dto.response.AuctionResponseDto;
 import com.auction.domain.auction.dto.response.ItemSearchResponseDto;
 import com.auction.domain.auction.entity.Auction;
 import com.auction.domain.auction.entity.Item;
-import com.auction.domain.auction.entity.QItem;
 import com.auction.domain.auction.enums.ItemCategory;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;

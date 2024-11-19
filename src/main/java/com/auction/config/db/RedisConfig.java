@@ -1,4 +1,4 @@
-package com.auction.config;
+package com.auction.config.db;
 
 import com.auction.domain.notification.service.RedisSubscriber;
 import org.redisson.Redisson;

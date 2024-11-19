@@ -1,5 +1,6 @@
 package com.auction.domain.auction.entity;
 
+import com.auction.common.entity.TimeStamped;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -10,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "auction_item_image")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class AuctionItemImage {
+public class AuctionItemImage extends TimeStamped {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,4 +1,4 @@
-package com.auction.config;
+package com.auction.config.db;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
