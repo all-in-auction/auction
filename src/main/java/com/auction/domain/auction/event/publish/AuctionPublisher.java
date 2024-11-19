@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
+import static com.auction.common.constants.RabbitMQConst.*;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -18,7 +20,7 @@ public class AuctionPublisher {
 
     public void auctionPublisher(Object object, long targetTime1, long targetTime2) {
         try {
-            rabbitTemplate.convertAndSend("exchange.auction", "auction",
+            rabbitTemplate.convertAndSend(AUCTION_EXCHANGE, selectRoutingKey(object),
                     objectMapper.writeValueAsString(object), msg -> {
                         msg.getMessageProperties().setHeader("x-delay", subtractTime(targetTime1, targetTime2));
                         return msg;
@@ -26,6 +28,11 @@ public class AuctionPublisher {
         } catch (JsonProcessingException e) {
             throw new ApiException(ErrorStatus._INVALID_REQUEST);
         }
+    }
+
+    private String selectRoutingKey(Object auctionEvent) {
+        int queueNumber = auctionEvent.hashCode() % routingKeys.length + 1;
+        return AUCTION_ROUTING_KEY_PREFIX + queueNumber;
     }
 
     private long subtractTime(long millis1, long millis2) {

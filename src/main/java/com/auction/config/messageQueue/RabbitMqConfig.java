@@ -8,8 +8,12 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import static com.auction.common.constants.RabbitMQConst.*;
 
 @Configuration
 public class RabbitMqConfig {
@@ -17,23 +21,29 @@ public class RabbitMqConfig {
     public CustomExchange auctionExchange() {
         Map<String, Object> arguments = new HashMap<>();
         arguments.put("x-delayed-type", "direct");
-        return new CustomExchange("exchange.auction", "x-delayed-message", true, false, arguments);
+        return new CustomExchange(AUCTION_EXCHANGE, "x-delayed-message", true, false, arguments);
     }
 
     @Bean
-    public Queue auctionQueue() {
-        return QueueBuilder.durable("auction.queue")
-                .deadLetterExchange("auction.dlx")
-                .build();
-    }
+    public Declarables auctionQueuesAndBindings(CustomExchange auctionExchange) {
+        List<Declarable> declarableList = new ArrayList<>();
 
-    @Bean
-    public Binding auctionBinding(Queue auctionQueue, CustomExchange auctionExchange) {
-        return BindingBuilder
-                .bind(auctionQueue)
-                .to(auctionExchange)
-                .with("auction")
-                .noargs();
+        for (int i = 0; i < queueNames.length; i++) {
+            Queue queue = QueueBuilder.durable(queueNames[i])
+                    // 노드에 큐 분산
+                    .withArgument("x-queue-master-locator", "min-masters")
+                    .deadLetterExchange(AUCTION_DLX)
+                    .build();
+            declarableList.add(queue);
+
+            Binding binding = BindingBuilder.bind(queue)
+                    .to(auctionExchange)
+                    .with(routingKeys[i])
+                    .noargs();
+            declarableList.add(binding);
+        }
+
+        return new Declarables(declarableList.toArray(new Declarable[0]));
     }
 
     @Bean
@@ -50,12 +60,12 @@ public class RabbitMqConfig {
 
     @Bean
     public Queue deadLetterQueue() {
-        return QueueBuilder.durable("auction.dlq").build();
+        return QueueBuilder.durable(AUCTION_DLQ).build();
     }
 
     @Bean
     public FanoutExchange deadLetterExchange() {
-        return ExchangeBuilder.fanoutExchange("auction.dlx").build();
+        return ExchangeBuilder.fanoutExchange(AUCTION_DLX).build();
     }
 
     @Bean
