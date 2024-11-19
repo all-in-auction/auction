@@ -205,7 +205,7 @@ public class AuctionService {
     private void handleDepositAndPoint(User user, Long auctionId, int bidPrice) {
         depositService.getDeposit(user.getId(), auctionId).ifPresentOrElse(
                 (deposit) -> {
-                    int prevDeposit = Integer.parseInt(deposit.toString());
+                    int prevDeposit = Integer.parseInt(deposit);
                     int gap = bidPrice - prevDeposit;
 
                     auctionBidGrpcService.grpcDecreasePoint(user.getId(), gap);
