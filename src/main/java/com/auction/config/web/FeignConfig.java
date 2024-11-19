@@ -1,12 +1,10 @@
 package com.auction.config.web;
 
 import com.auction.feign.decoder.ApiErrorDecoder;
-import feign.Client;
 import feign.Logger;
 import feign.Request;
 import feign.Retryer;
 import feign.codec.ErrorDecoder;
-import feign.okhttp.OkHttpClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,10 +41,5 @@ public class FeignConfig {
     @Bean
     public Retryer retryer() {
         return new Retryer.Default(500L, TimeUnit.SECONDS.toMillis(5), 2);
-    }
-
-    @Bean
-    public Client feignClient() {
-        return new OkHttpClient();
     }
 }

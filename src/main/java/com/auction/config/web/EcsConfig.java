@@ -25,11 +25,11 @@ public class EcsConfig {
         EurekaInstanceConfigBean config = new EurekaInstanceConfigBean(inetUtils);
 
         config.setPreferIpAddress(true);
-        config.setAppname("points-service");
+        config.setAppname("auction-service");
         String taskArn = System.getenv("ECS_CONTAINER_METADATA_URI_V4");
         String ip = getPrivateIp(taskArn);
         config.setIpAddress(ip);
-        config.setInstanceId("points-service:"+ip);
+        config.setInstanceId("auction-service:"+ip);
         config.setNonSecurePort(8080);
 
         return config;
