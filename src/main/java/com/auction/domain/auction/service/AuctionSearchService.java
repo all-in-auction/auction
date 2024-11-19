@@ -36,8 +36,8 @@ public class AuctionSearchService {
     }
     public Page<ItemSearchResponseDto> searchAllAuctionItems(Pageable pageable) {
         List<Item> all = itemRepository.findAll();
-        List<ItemSearchResponseDto> dtos = all.stream().map(ItemSearchResponseDto::from).toList();
-        return new PageImpl<>(dtos, pageable, all.size());
+        List<ItemSearchResponseDto> dtoList = all.stream().map(ItemSearchResponseDto::from).toList();
+        return new PageImpl<>(dtoList, pageable, all.size());
     }
 
     // ES 적용 O
@@ -57,17 +57,17 @@ public class AuctionSearchService {
 
         SearchResponse<ItemDocument> response = elasticsearchClient.search(searchRequest, ItemDocument.class);
 
-        List<ItemDocumentResponseDto> dtos = response.hits().hits().stream()
+        List<ItemDocumentResponseDto> dtoList = response.hits().hits().stream()
                 .map(hit -> ItemDocumentResponseDto.from(hit.source()))
                 .collect(Collectors.toList());
 
-        return new PageImpl<>(dtos, pageable, response.hits().total().value());
+        return new PageImpl<>(dtoList, pageable, response.hits().total().value());
     }
 
     public Page<ItemDocumentResponseDto> elasticSearchAllAuctionItems(Pageable pageable) {
         List<ItemDocument> documents = (List<ItemDocument>) elasticRepository.findAll();
-        List<ItemDocumentResponseDto> dtos = documents.stream().map(ItemDocumentResponseDto::from).toList();
-        return new PageImpl<>(dtos, pageable, documents.size());
+        List<ItemDocumentResponseDto> dtoList = documents.stream().map(ItemDocumentResponseDto::from).toList();
+        return new PageImpl<>(dtoList, pageable, documents.size());
     }
 
     public Page<ItemDocumentResponseDto> elasticSearchAuctionItemsByKeyword(Pageable pageable, String keyword) throws IOException {
@@ -91,11 +91,11 @@ public class AuctionSearchService {
 
         SearchResponse<ItemDocument> response = elasticsearchClient.search(searchRequest, ItemDocument.class);
 
-        List<ItemDocumentResponseDto> dtos = response.hits().hits().stream()
+        List<ItemDocumentResponseDto> dtoList = response.hits().hits().stream()
                 .map(hit -> ItemDocumentResponseDto.from(hit.source()))
                 .collect(Collectors.toList());
 
-        return new PageImpl<>(dtos, pageable, response.hits().total().value());
+        return new PageImpl<>(dtoList, pageable, response.hits().total().value());
     }
 
 }

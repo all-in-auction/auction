@@ -1,7 +1,6 @@
 package com.auction.feign.dto.request;
 
 import com.auction.feign.enums.PaymentType;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

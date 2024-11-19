@@ -1,7 +1,6 @@
 package com.auction.domain.coupon.dto.response;
 
 import com.auction.domain.coupon.dto.CouponUserDto;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
