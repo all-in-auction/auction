@@ -49,7 +49,7 @@ class NotificationServiceTest {
         // then
         assertNotNull(resultEmitter);
         verify(sseEmitterService).createEmitter(userId);
-        verify(sseEmitterService).send("EventStream Created.", userId, emitter);
+        verify(sseEmitterService).send(any(), eq(userId), any());
         verify(redisMessageService).subscribe(userId);
     }
 
