@@ -398,4 +398,37 @@ public class AuctionService {
             throw new ApiException(ErrorStatus._INVALID_LESS_THAN_MAX_PRICE);
         }
     }
+
+    // Fallback methods
+
+    private BidCreateResponseDto createBidFallback(Long userId, Long auctionId,
+                                                   BidCreateRequestDto bidCreateRequestDto,
+                                                   Throwable t) {
+        log.error("Fallback for createBid: User={}, Auction={}, Error={}",
+                userId, auctionId, t.getMessage());
+
+        return new BidCreateResponseDto();
+    }
+
+    private void closeAuctionFallback(AuctionEvent auctionEvent, Throwable t) {
+        log.error("Fallback for closeAuction: AuctionEvent={}, Error={}",
+                auctionEvent.toString(), t.getMessage());
+
+        log.warn("Auction close event will be retried or handled later.");
+    }
+
+    private int grpcUserPointFallback(long userId, Throwable t) {
+        log.error("Fallback for grpcUserPoint: userId={}, Error={}", userId, t.getMessage());
+
+        // 기본값 반환
+        return 0;
+    }
+
+    private void grpcDecreasePointFallback(long userId, int amount, Throwable t) {
+        log.error("Fallback triggered for grpcDecreasePoint. User ID: {}, Amount: {}, Error: {}",
+                userId, amount, t.getMessage());
+
+        // 실패 기록만 남기고 중단 없이 종료
+        log.error("Decrease Point operation failed and will not proceed further.");
+    }
 }
