@@ -14,14 +14,16 @@ import com.auction.domain.user.entity.User;
 import com.auction.domain.user.service.UserService;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
@@ -30,14 +32,13 @@ import java.util.Set;
 
 import static com.auction.data.auction.AuctionMockDataUtil.auction;
 import static com.auction.data.auction.AuctionMockDataUtil.bidCreateRequestDto;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.mock;
 
 @SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class CircuitBreakerTest {
 
     @Autowired
@@ -56,20 +57,15 @@ class CircuitBreakerTest {
     private ZSetOperations<String, Object> zSetOperations;
     @Autowired
     private AuctionService auctionService;
-    private CircuitBreaker circuitBreaker;
 
     @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     public class CreateBidServiceTest {
 
-        @BeforeEach
-        public void setUp() {
-            circuitBreaker = circuitBreakerRegistry.circuitBreaker("createBidService");
-        }
+        private final CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("createBidService");
 
         @AfterEach
         public void tearDown() {
-            circuitBreaker.reset();
+            circuitBreaker.transitionToClosedState();
         }
 
         @Test
@@ -191,16 +187,13 @@ class CircuitBreakerTest {
     }
 
     @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     public class GrpcUserPointTest {
-        @BeforeEach
-        public void setUp() {
-            circuitBreaker = circuitBreakerRegistry.circuitBreaker("grpcUserPoint");
-        }
+
+        private final CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("grpcUserPoint");
 
         @AfterEach
         public void tearDown() {
-            circuitBreaker.reset();
+            circuitBreaker.transitionToClosedState();
         }
 
         @Test
@@ -235,16 +228,13 @@ class CircuitBreakerTest {
     }
 
     @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     public class GrpcDecreasePointTest {
-        @BeforeEach
-        public void setUp() {
-            circuitBreaker = circuitBreakerRegistry.circuitBreaker("grpcDecreasePoint");
-        }
+
+        private final CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("grpcDecreasePoint");
 
         @AfterEach
         public void tearDown() {
-            circuitBreaker.reset();
+            circuitBreaker.transitionToClosedState();
         }
 
         @Test
@@ -266,17 +256,14 @@ class CircuitBreakerTest {
     }
 
     @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     @Disabled   // 이미 grpc 내에서 오류 처리가 되어 있어 circuit breaker 붙여도 소용 없는 것 아닌지...
     public class createPointHistoryTest {
-        @BeforeEach
-        public void setUp() {
-            circuitBreaker = circuitBreakerRegistry.circuitBreaker("createPointHistory");
-        }
+
+        private final CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("createPointHistory");
 
         @AfterEach
         public void tearDown() {
-            circuitBreaker.reset();
+            circuitBreaker.transitionToClosedState();
         }
 
         @Test
@@ -300,16 +287,13 @@ class CircuitBreakerTest {
     }
 
     @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     public class closeAuctionTest {
-        @BeforeEach
-        public void setUp() {
-            circuitBreaker = circuitBreakerRegistry.circuitBreaker("closeAuction");
-        }
+
+        private final CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker("closeAuction");
 
         @AfterEach
         public void tearDown() {
-            circuitBreaker.reset();
+            circuitBreaker.transitionToClosedState();
         }
 
         @Test
