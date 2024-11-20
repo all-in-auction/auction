@@ -21,9 +21,9 @@ public class DepositService {
         redisTemplate.opsForHash().put(key(userId, auctionId), DEPOSIT, String.valueOf(price));
     }
 
-    public Optional<Object> getDeposit(long userId, long auctionId) {
+    public Optional<String> getDeposit(long userId, long auctionId) {
         Object deposit = redisTemplate.opsForHash().get(key(userId, auctionId), DEPOSIT);
-        return Optional.ofNullable(deposit);
+        return Optional.ofNullable(deposit).map(Object::toString);
     }
 
     public void deleteDeposit(long userId, long auctionId) {

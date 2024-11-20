@@ -13,6 +13,16 @@ spring:
   main:
     allow-bean-definition-overriding: true
 
+  rabbitmq:
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 3s
+          max-interval: 10s
+          max-attempts: 3
+          multiplier: 2
+
 cloud:
   aws:
     s3:

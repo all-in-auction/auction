@@ -22,14 +22,6 @@ spring:
     port: 5672
     username: guest
     password: guest
-    listener:
-      simple:
-        retry:
-          enabled: true
-          initial-interval: 3s
-          max-interval: 10s
-          max-attempts: 3
-          multiplier: 2
 
   data:
     redis:
@@ -96,4 +88,10 @@ spring:
 logging:
   level:
     root: DEBUG
+
+springdoc:
+  api-docs:
+    path: /auction/v3/api-docs
+  swagger-ui:
+    path: /auction/swagger-ui.html
 
