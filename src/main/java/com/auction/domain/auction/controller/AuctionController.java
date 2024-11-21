@@ -66,7 +66,7 @@ public class AuctionController {
             description = "요청에 성공하였습니다.",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuctionCreateResponseDto.class))
     )
-    public ApiResponse<AuctionCreateResponseDto> createAuction(@RequestHeader(USER_ID) long userId,
+    public ApiResponse<AuctionCreateResponseDto> createAuction(@Parameter(hidden = true) @RequestHeader(USER_ID) long userId,
                                                                @Valid @RequestBody AuctionCreateRequestDto requestDto) {
         return ApiResponse.created(auctionService.createAuction(userId, requestDto));
     }
