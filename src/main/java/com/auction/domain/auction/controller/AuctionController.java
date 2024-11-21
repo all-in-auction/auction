@@ -95,9 +95,8 @@ public class AuctionController {
     @GetMapping("/v4/auctions")
     @Operation(summary = "경매 전체 조회", description = "경매 목록 조회하는 API")
     @Parameters({
-            @Parameter(name = "page", description = "현재 페이지", example = "0"),
-            @Parameter(name = "size", description = "한 페이지 내 데이터 건수", example = "5"),
-            @Parameter(name = "sort", description = "정렬 기준", example = "modifiedAt")
+            @Parameter(name = "page", description = "페이지 번호", example = "0"),
+            @Parameter(name = "size", description = "페이지당 항목 수", example = "5")
     })
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "요청에 성공하였습니다.",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuctionPageResponseDto.class)))

@@ -45,8 +45,8 @@ public class AuctionItemSearchController {
     @Operation(summary = "경매 조건 검색", description = "경매 조건 검색하는 API")
     @Parameters({
             @Parameter(name = "keyword", description = "경매 물품 이름(부분 검색 허용)", example = "시계"),
-            @Parameter(name = "page", description = "페이지 번호(0부터 시작)", example = "0", in = ParameterIn.QUERY),
-            @Parameter(name = "size", description = "페이지당 항목 수", example = "5", in = ParameterIn.QUERY)
+            @Parameter(name = "page", description = "페이지 번호", example = "0"),
+            @Parameter(name = "size", description = "페이지당 항목 수", example = "5")
     })
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
@@ -56,7 +56,7 @@ public class AuctionItemSearchController {
                     schema = @Schema(implementation = ItemSearchResponsePageDto.class)
             )
     )
-    public ApiResponse<Page<ItemSearchResponseDto>> searchAuctionItems(@PageableDefault(size = 5) Pageable pageable,
+    public ApiResponse<Page<ItemSearchResponseDto>> searchAuctionItems(@Parameter(hidden = true) @PageableDefault(size = 5) Pageable pageable,
                                                                        @RequestParam(required = false) String keyword) {
         if(keyword == null || keyword.isEmpty()) {
             return ApiResponse.ok(searchService.searchAllAuctionItems(pageable));
@@ -67,7 +67,9 @@ public class AuctionItemSearchController {
     @GetMapping("/elasticsearch")
     @Operation(summary = "경매 조건 검색(엘라스틱 서치)", description = "경매 조건 검색하는 API")
     @Parameters({
-            @Parameter(name = "keyword", description = "경매 물품 이름(부분 검색 허용)", example = "시계")
+            @Parameter(name = "keyword", description = "경매 물품 이름(부분 검색 허용)", example = "시계"),
+            @Parameter(name = "page", description = "페이지 번호", example = "0"),
+            @Parameter(name = "size", description = "페이지당 항목 수", example = "5")
     })
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
@@ -77,7 +79,7 @@ public class AuctionItemSearchController {
                     schema = @Schema(implementation = ItemDocumentResponsePageDto.class)
             )
     )
-    public ApiResponse<Page<ItemDocumentResponseDto>> elasticSearchAuctionItems(@PageableDefault(size = 5) Pageable pageable,
+    public ApiResponse<Page<ItemDocumentResponseDto>> elasticSearchAuctionItems(@Parameter(hidden = true) @PageableDefault(size = 5) Pageable pageable,
                                                                                 @RequestParam(required = false) String keyword) throws IOException {
         if(keyword == null || keyword.isEmpty()) {
             return ApiResponse.ok(searchService.elasticSearchAllAuctionItems(pageable));
