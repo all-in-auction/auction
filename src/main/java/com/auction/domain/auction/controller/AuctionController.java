@@ -59,7 +59,7 @@ public class AuctionController {
                             "  \"item\": {\n" +
                             "    \"name\": \"핸드폰\",\n" +
                             "    \"description\": \"새로운 스마트폰입니다.\",\n" +
-                            "    \"category\": \"전자기기\"\n" +
+                            "    \"category\": \"ELECTRONICS\"\n" +
                             "  }\n" +
                             "}")
             )
@@ -126,7 +126,7 @@ public class AuctionController {
                     examples = @ExampleObject(value = "{\n" +
                             "  \"name\": \"새로운 경매 상품\",\n" +
                             "  \"description\": \"거의 새것 같습니다.\",\n" +
-                            "  \"category\": \"전자기기\"\n" +
+                            "  \"category\": \"ELECTRONICS\"\n" +
                             "}")
             )
     )
