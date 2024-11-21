@@ -39,7 +39,6 @@ public class AuctionItemImageController {
     @PostMapping
     @Operation(summary = "경매 물품 이미지 등록", description = "경매 물품 이미지 등록하는 API")
     @Parameters({
-            @Parameter(name = USER_ID, description = "유저 ID", example = "100000"),
             @Parameter(name = "auctionId", description = "경매 ID", example = "100000")
     })
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -50,7 +49,7 @@ public class AuctionItemImageController {
                     schema = @Schema(implementation = AuctionItemImageResponseListDto.class)
             )
     )
-    public ApiResponse<List<AuctionItemImageResponseDto>> uploadImages(@RequestHeader(USER_ID) long userId,
+    public ApiResponse<List<AuctionItemImageResponseDto>> uploadImages(@Parameter(hidden = true) @RequestHeader(USER_ID) long userId,
                                                                        @PathVariable("auctionId") Long auctionId,
                                                                        @RequestParam("files") List<MultipartFile> files) throws IOException {
         return ApiResponse.created(auctionItemImageService.uploadImages(userId, auctionId, files));
@@ -66,7 +65,6 @@ public class AuctionItemImageController {
     @DeleteMapping("/{imageId}")
     @Operation(summary = "경매 물품 이미지 삭제", description = "경매 물품 이미지 삭제하는 API")
     @Parameters({
-            @Parameter(name = USER_ID, description = "유저 ID", example = "100000"),
             @Parameter(name = "auctionId", description = "경매 ID", example = "100000"),
             @Parameter(name = "imageId", description = "이미지 ID", example = "10")
     })
@@ -79,7 +77,7 @@ public class AuctionItemImageController {
                     examples = @ExampleObject(value = "{\"message\": \"이미지가 삭제되었습니다.\"}")
             )
     )
-    public ApiResponse<String> deleteImage(@RequestHeader(USER_ID) long userId,
+    public ApiResponse<String> deleteImage(@Parameter(hidden = true) @RequestHeader(USER_ID) long userId,
                                            @PathVariable("auctionId") Long auctionId,
                                            @PathVariable("imageId") Long imageId) {
         return ApiResponse.ok(auctionItemImageService.deleteImages(userId, auctionId, imageId));

@@ -50,7 +50,6 @@ public class CouponController {
     @PostMapping("/v3/coupons/{couponId}/claim")
     @Operation(summary = "쿠폰 발급", description = "쿠폰 발급받는 API")
     @Parameters({
-            @Parameter(name = USER_ID, description = "유저 ID", example = "100000"),
             @Parameter(name = "couponId", description = "쿠폰 ID", example = "10")
     })
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -61,7 +60,7 @@ public class CouponController {
                     schema = @Schema(implementation = CouponClaimResponseDto.class)
             )
     )
-    public ApiResponse<CouponClaimResponseDto> claimCouponV3(@RequestHeader(USER_ID) long userId,
+    public ApiResponse<CouponClaimResponseDto> claimCouponV3(@Parameter(hidden = true) @RequestHeader(USER_ID) long userId,
                                                              @PathVariable Long couponId) {
         return ApiResponse.ok(couponService.claimCouponV3(userId, couponId));
     }

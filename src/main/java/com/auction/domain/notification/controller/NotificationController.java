@@ -29,15 +29,13 @@ public class NotificationController {
 
     @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "알림 구독", description = "알림 수신을 위해 구독하는 API")
-    @Parameter(name = USER_ID, description = "유저 ID", example = "100000")
-    public SseEmitter subscribe(@RequestHeader(USER_ID) long userId) {
+    public SseEmitter subscribe(@Parameter(hidden = true) @RequestHeader(USER_ID) long userId) {
         return notificationService.subscribe((String.valueOf(userId)));
     }
 
     @GetMapping
     @Operation(summary = "알림 확인", description = "알림 전체 목록 확인하는 API")
     @Parameters({
-            @Parameter(name = USER_ID, description = "유저 ID", example = "100000"),
             @Parameter(name = "type", description = "알림 타입", example = "AUCTION")
     })
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -48,7 +46,7 @@ public class NotificationController {
                     schema = @Schema(implementation = NotificationResponseListDto.class)
             )
     )
-    public ApiResponse<List<GetNotificationResponseDto>> getNotificationList(@RequestHeader(USER_ID) long userId,
+    public ApiResponse<List<GetNotificationResponseDto>> getNotificationList(@Parameter(hidden = true) @RequestHeader(USER_ID) long userId,
                                                                              @RequestParam(required = false) String type) {
         return ApiResponse.ok(notificationService.getNotificationList(userId, type));
     }

@@ -30,9 +30,6 @@ public class UserController {
 
     @PostMapping("/v2/users")
     @Operation(summary = "회원정보 수정", description = "회원정보 수정하는 API")
-    @Parameters({
-            @Parameter(name = USER_ID, description = "유저 ID", example = "100000")
-    })
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "수정할 회원정보",
             required = true,
@@ -49,7 +46,7 @@ public class UserController {
             )
     )
     public ApiResponse<UserResponseDto> updateUser(
-            @RequestHeader(USER_ID) long userId,
+            @Parameter(hidden = true) @RequestHeader(USER_ID) long userId,
             @RequestBody UserUpdateRequestDto userUpdateRequest) {
 
         return ApiResponse.ok(userService.updateUser(userId, userUpdateRequest));
@@ -57,9 +54,6 @@ public class UserController {
 
     @GetMapping("/v2/users/mypage/sales")
     @Operation(summary = "판매 물품 조회", description = "판매 물품 목록 조회하는 API")
-    @Parameters({
-            @Parameter(name = USER_ID, description = "유저 ID", example = "100000")
-    })
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
             description = "요청에 성공하였습니다.",
@@ -69,16 +63,13 @@ public class UserController {
             )
     )
     public ApiResponse<List<ItemResponseDto>> getSales(
-            @RequestHeader(USER_ID) long userId) {
+            @Parameter(hidden = true) @RequestHeader(USER_ID) long userId) {
 
         return ApiResponse.ok(userService.getSales(userId));
     }
 
     @GetMapping("/v2/users/mypage/purchases")
     @Operation(summary = "구매 물품 조회", description = "구매 물품 목록 조회하는 API")
-    @Parameters({
-            @Parameter(name = USER_ID, description = "유저 ID", example = "100000")
-    })
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
             description = "요청에 성공하였습니다.",
@@ -88,7 +79,7 @@ public class UserController {
             )
     )
     public ApiResponse<List<ItemResponseDto>> getPurchases(
-            @RequestHeader(USER_ID) long userId) {
+            @Parameter(hidden = true) @RequestHeader(USER_ID) long userId) {
 
         return ApiResponse.ok(userService.getPurchases(userId));
     }

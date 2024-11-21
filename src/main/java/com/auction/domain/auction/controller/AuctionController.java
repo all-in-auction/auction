@@ -112,7 +112,6 @@ public class AuctionController {
     @PutMapping("/v4/auctions/{auctionId}")
     @Operation(summary = "경매 물품 수정", description = "경매 물품 수정하는 API")
     @Parameters({
-            @Parameter(name = USER_ID, description = "유저 ID", example = "100000"),
             @Parameter(name = "auctionId", description = "경매 ID", example = "100000")
     })
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -129,7 +128,7 @@ public class AuctionController {
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "요청에 성공하였습니다.",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuctionResponseDto.class)))
-    public ApiResponse<AuctionResponseDto> updateAuctionItem(@RequestHeader(USER_ID) long userId,
+    public ApiResponse<AuctionResponseDto> updateAuctionItem(@Parameter(hidden = true) @RequestHeader(USER_ID) long userId,
                                                              @PathVariable Long auctionId,
                                                              @Valid @RequestBody AuctionItemChangeRequestDto requestDto) {
         return ApiResponse.ok(auctionService.updateAuctionItem(userId, auctionId, requestDto));
@@ -144,12 +143,11 @@ public class AuctionController {
     @DeleteMapping("/v4/auctions/{auctionId}")
     @Operation(summary = "경매 삭제", description = "경매 삭제하는 API")
     @Parameters({
-            @Parameter(name = USER_ID, description = "유저 ID", example = "100000"),
             @Parameter(name = "auctionId", description = "경매 ID", example = "100000")
     })
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "요청에 성공하였습니다.",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class), examples = @ExampleObject(value = "{\"message\": \"물품이 삭제되었습니다.\"}")))
-    public ApiResponse<String> deleteAuctionItem(@RequestHeader(USER_ID) long userId,
+    public ApiResponse<String> deleteAuctionItem(@Parameter(hidden = true) @RequestHeader(USER_ID) long userId,
                                                  @PathVariable Long auctionId) {
         return ApiResponse.ok(auctionService.deleteAuctionItem(userId, auctionId));
     }
@@ -164,7 +162,6 @@ public class AuctionController {
     @PostMapping("/v4/auctions/{auctionId}/bid")
     @Operation(summary = "입찰 등록", description = "입찰 등록하는 API")
     @Parameters({
-            @Parameter(name = USER_ID, description = "유저 ID", example = "100000"),
             @Parameter(name = "auctionId", description = "경매 ID", example = "100000")
     })
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -190,7 +187,7 @@ public class AuctionController {
                             }))
     })
     public ApiResponse<BidCreateResponseDto> createBid(
-            @RequestHeader(USER_ID) long userId,
+            @Parameter(hidden = true) @RequestHeader(USER_ID) long userId,
             @PathVariable("auctionId") Long auctionId,
             @Valid @RequestBody BidCreateRequestDto bidCreateRequestDto
     ) {

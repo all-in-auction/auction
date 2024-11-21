@@ -97,9 +97,6 @@ public class AuthController {
 
     @PutMapping("/v1/auth/signout")
     @Operation(summary = "회원 탈퇴", description = "회원 탈퇴하는 API")
-    @Parameters({
-            @Parameter(name = USER_ID, description = "유저 ID", example = "100000")
-    })
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "탈퇴 회원 정보",
             required = true,
@@ -109,7 +106,7 @@ public class AuthController {
             )
     )
     public ApiResponse<Void> deactivateUser(
-            @RequestHeader(USER_ID) long userId,
+            @Parameter(hidden = true) @RequestHeader(USER_ID) long userId,
             @RequestBody SignoutRequest signoutRequest) {
 
         authService.deactivateUser(userId, signoutRequest);

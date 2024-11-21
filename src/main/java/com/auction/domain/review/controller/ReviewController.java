@@ -30,7 +30,6 @@ public class ReviewController {
     @PostMapping("/v2/auctions/{auctionId}/reviews")
     @Operation(summary = "리뷰 생성", description = "리뷰 생성하는 API")
     @Parameters({
-            @Parameter(name = USER_ID, description = "유저 ID", example = "100000"),
             @Parameter(name = "auctionId", description = "경매 ID", example = "100000")
     })
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -48,9 +47,9 @@ public class ReviewController {
                     schema = @Schema(implementation = ReviewResponseDto.class)
             )
     )
-    public ApiResponse<ReviewResponseDto> createReview(@RequestHeader(USER_ID) long userId,
-                                                        @PathVariable Long auctionId,
-                                                        @RequestBody ReviewCreateRequestDto requestDto) {
+    public ApiResponse<ReviewResponseDto> createReview(@Parameter(hidden = true) @RequestHeader(USER_ID) long userId,
+                                                       @PathVariable Long auctionId,
+                                                       @RequestBody ReviewCreateRequestDto requestDto) {
         return ApiResponse.created(reviewService.createReview(userId, auctionId, requestDto));
     }
 
@@ -58,7 +57,6 @@ public class ReviewController {
     @PutMapping("/v2/auctions/{auctionId}/reviews")
     @Operation(summary = "리뷰 수정", description = "리뷰 수정하는 API")
     @Parameters({
-            @Parameter(name = USER_ID, description = "유저 ID", example = "100000"),
             @Parameter(name = "auctionId", description = "경매 ID", example = "100000")
     })
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -76,7 +74,7 @@ public class ReviewController {
                     schema = @Schema(implementation = ReviewResponseDto.class)
             )
     )
-    public ApiResponse<ReviewResponseDto> updateReview(@RequestHeader(USER_ID) long userId,
+    public ApiResponse<ReviewResponseDto> updateReview(@Parameter(hidden = true) @RequestHeader(USER_ID) long userId,
                                                        @PathVariable Long auctionId,
                                                        @RequestBody ReviewUpdateRequestDto requestDto) {
         return ApiResponse.ok(reviewService.updateReview(userId, auctionId,requestDto));
@@ -104,7 +102,6 @@ public class ReviewController {
     @DeleteMapping("/v2/auctions/{auctionId}/reviews")
     @Operation(summary = "리뷰 삭제", description = "리뷰 삭제하는 API")
     @Parameters({
-            @Parameter(name = USER_ID, description = "유저 ID", example = "100000"),
             @Parameter(name = "auctionId", description = "경매 ID", example = "100000")
     })
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -116,8 +113,8 @@ public class ReviewController {
                     examples = @ExampleObject(value = "{\"message\": \"리뷰가 삭제되었습니다.\"}")
             )
     )
-    public ApiResponse<String> deleteReview(@RequestHeader(USER_ID) long userId,
-                                          @PathVariable Long auctionId) {
+    public ApiResponse<String> deleteReview(@Parameter(hidden = true) @RequestHeader(USER_ID) long userId,
+                                            @PathVariable Long auctionId) {
         reviewService.deleteReview(userId, auctionId);
         return ApiResponse.ok("리뷰가 삭제되었습니다.");
     }
