@@ -89,9 +89,3 @@ logging:
   level:
     root: DEBUG
 
-springdoc:
-  api-docs:
-    path: /auction/v3/api-docs
-  swagger-ui:
-    path: /auction/swagger-ui.html
-
