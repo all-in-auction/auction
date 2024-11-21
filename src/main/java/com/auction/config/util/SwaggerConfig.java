@@ -38,8 +38,8 @@ public class SwaggerConfig {
 
     private Info apiInfo() {
         return new Info()
-                .title("ALL IN AUCTION - POINT API")
-                .description("API documentation for Point Service")
+                .title("ALL IN AUCTION - Auction API")
+                .description("API documentation for Auction Service")
                 .version("v4");
     }
 }

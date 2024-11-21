@@ -46,9 +46,6 @@ public class AuctionController {
      */
     @PostMapping("/v4/auctions")
     @Operation(summary = "경매 생성", description = "경매 생성하는 API")
-    @Parameters({
-            @Parameter(name = USER_ID, description = "유저 ID", example = "100000")
-    })
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             content = @Content(
                     schema = @Schema(implementation = AuctionCreateRequestDto.class),
