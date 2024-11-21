@@ -138,8 +138,8 @@ public class AuctionService {
         return "물품이 삭제되었습니다.";
     }
 
+//    @CircuitBreaker(name = "createBidService", fallbackMethod = "createBidFallback")
     @DistributedLock(key = "T(java.lang.String).format('Auction%d', #auctionId)")
-    @CircuitBreaker(name = "createBidService", fallbackMethod = "createBidFallback")
     public BidCreateResponseDto createBid(Long userId, Long auctionId, BidCreateRequestDto bidCreateRequestDto) {
         User user = User.fromUserId(userId);
         Auction auction = getAuctionById(auctionId);
@@ -407,7 +407,7 @@ public class AuctionService {
         log.error("Fallback for createBid: User={}, Auction={}, Error={}",
                 userId, auctionId, t.getMessage());
 
-        return new BidCreateResponseDto();
+        throw new ApiException(ErrorStatus._INTERNAL_SERVER_ERROR);
     }
 
     private void closeAuctionFallback(AuctionEvent auctionEvent, Throwable t) {
@@ -415,13 +415,17 @@ public class AuctionService {
                 auctionEvent.toString(), t.getMessage());
 
         log.warn("Auction close event will be retried or handled later.");
+
+        throw new ApiException(ErrorStatus._INTERNAL_SERVER_ERROR);
     }
 
     private int grpcUserPointFallback(long userId, Throwable t) {
         log.error("Fallback for grpcUserPoint: userId={}, Error={}", userId, t.getMessage());
 
-        // 기본값 반환
-        return 0;
+//        // 기본값 반환
+//        return 0;
+
+        throw new ApiException(ErrorStatus._INTERNAL_SERVER_ERROR);
     }
 
     private void grpcDecreasePointFallback(long userId, int amount, Throwable t) {
@@ -430,5 +434,7 @@ public class AuctionService {
 
         // 실패 기록만 남기고 중단 없이 종료
         log.error("Decrease Point operation failed and will not proceed further.");
+
+        throw new ApiException(ErrorStatus._INTERNAL_SERVER_ERROR);
     }
 }
