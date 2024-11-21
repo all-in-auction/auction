@@ -1,0 +1,91 @@
+spring:
+  datasource:
+    master:
+      jdbc-url: ${MASTER_DB_URL}
+      username: root
+      password: ${MASTER_DB_PW}
+      driver-class-name: com.mysql.cj.jdbc.Driver
+    slave:
+      jdbc-url: ${SLAVE_DB_URL}
+      username: root
+      password: ${SLAVE_DB_PW}
+      driver-class-name: com.mysql.cj.jdbc.Driver
+
+  thymeleaf:
+    cache: false
+    check-template-location: true
+    prefix: classpath:/templates/
+    suffix: .html
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: 5672
+    username: guest
+    password: guest
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: 6379
+      password: ${REDIS_PASSWORD}
+    elasticsearch:
+      repositories:
+        enabled: true
+
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        show_sql: true
+        format_sql: true
+        use_sql_comments: true
+
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS}
+    username: ${ELASTICSEARCH_USERNAME}
+    password: ${ELASTICSEARCH_PASSWORD}
+
+payment:
+  client:
+    key: ${PAYMENT_CLIENT_KEY}
+  secret:
+    key: ${PAYMENT_SECRET_KEY}
+
+server:
+  error:
+    include-message: always
+  port: 8080
+
+notification:
+  related-url:
+    auction: auctionlb-1965560899.ap-northeast-2.elb.amazonaws.com:80/api/v1/auctions/
+    review: auctionlb-1965560899.ap-northeast-2.elb.amazonaws.com:80/api/v2/reviews/
+
+kafka:
+  topic:
+    refund: "refund-point-topic"
+    coupon: "coupon-claim-topic"
+  consumer:
+    coupon-group:
+      group-id: "coupon-group"
+    refund-group:
+      group-id: "refund-group"
+  producer:
+    bootstrap-servers: ${KAFKA_HOSTS}
+    properties:
+      num.partitions: 3
+
+---
+spring:
+  config.activate.on-profile: master
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+logging:
+  level:
+    root: DEBUG
+

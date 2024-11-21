@@ -6,24 +6,32 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
 
 @Getter
+@NoArgsConstructor
 @AllArgsConstructor
 @JsonPropertyOrder({"success", "statusCode", "message", "data"})
-public class ApiResponse<T> {
+public class ApiResponse<T> implements Serializable {
 
     @JsonProperty("success")
-    private final Boolean success;
+    private Boolean success;
 
-    private final String statusCode;
+    private String statusCode;
 
-    private final String message;
+    private String message;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private final T data;
+    private T data;
 
     public static <T> ApiResponse<T> ok(T data) {
         return new ApiResponse<>(true, SuccessStatus._OK.getStatusCode(), SuccessStatus._OK.getMessage(), data);
+    }
+
+    public static <T> ApiResponse<T> created(T data) {
+        return new ApiResponse<>(true, SuccessStatus._CREATED.getStatusCode(), SuccessStatus._CREATED.getMessage(), data);
     }
 
     public static ApiResponse<String> fail(BaseCode errorCode) {

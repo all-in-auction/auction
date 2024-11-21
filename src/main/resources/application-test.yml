@@ -1,0 +1,63 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:test
+    username: sa
+    password:
+    driverClassName: org.h2.Driver
+  h2:
+    console:
+      enabled: true
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 3s
+          max-interval: 10s
+          max-attempts: 3
+          multiplier: 2
+
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS}
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password : auth
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        auto_quote_keyword: true
+        highlight_sql: true
+        show_sql: true
+        format_sql: true
+    database-platform: org.hibernate.dialect.H2Dialect
+
+payment:
+  client:
+    key: ${PAYMENT_CLIENT_KEY}
+  secret:
+    key: ${PAYMENT_SECRET_KEY}
+
+notification:
+  related-url:
+    auction: localhost:8080/api/v1/auctions/
+    review: localhost:8080/api/v2/reviews/
+
+
+kafka:
+  topic:
+    coupon: "coupon-claim-topic"
+  consumer:
+    group-id: "coupon-group"
+  producer:
+    bootstrap-servers: "localhost:9092"

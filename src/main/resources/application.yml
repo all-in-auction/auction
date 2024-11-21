@@ -1,7 +1,80 @@
 spring:
   profiles:
     active: dev
+  config:
+    import: optional:file:.env[.properties]
+  application:
+    name: auction-service
 
-  jwt:
-    secret:
-      key: ${JWT_SECRET_KEY}
+  cloud:
+    openfeign:
+      okhttp:
+        enabled: true
+  main:
+    allow-bean-definition-overriding: true
+
+  rabbitmq:
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 3s
+          max-interval: 10s
+          max-attempts: 3
+          multiplier: 2
+
+cloud:
+  aws:
+    s3:
+      bucket: ${S3_NAME}
+    stack:
+      auto: false
+    region:
+      static: ap-northeast-2
+    credentials:
+      access-key: ${S3_ACCESS}
+      secret-key: ${S3_SECRET}
+
+jwt:
+  secret:
+    key: ${JWT_SECRET_KEY}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus,health,resilience4j.circuitbreakers
+
+  endpoint:
+    health:
+      show-details: always
+  security:
+    enabled: false
+
+  health:
+    eureka:
+      enabled: false
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${EUREKA_HOST}:8761/eureka
+
+logging:
+  level:
+    com.zaxxer.hikari.HikariConfig: DEBUG
+    com.zaxxer.hikari: TRACE
+    com.auction.feign.service.PointService: DEBUG
+
+server:
+  http2:
+    enabled: true
+
+springdoc:
+  api-docs:
+    version: openapi_3_1
+    enabled: true
+    path: /v3/api-docs # API 문서의 경로를 설정합니다.
+  swagger-ui:
+    path: /index.html
+  enable-spring-security: true

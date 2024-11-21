@@ -1,22 +1,52 @@
 package com.auction.domain.auction.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.auction.common.entity.TimeStamped;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
-@NoArgsConstructor
-public class AuctionItemImage {
+@Table(name = "auction_item_image")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class AuctionItemImage extends TimeStamped {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @NotNull
+    @Column(name = "path")
     private String path;
+
+    @NotNull
+    @Column(name = "file_name")
     private String fileName;
+
+    @NotNull
+    @Column(name = "origin_name")
     private String originName;
+
+    @NotNull
+    @Column(name = "extension")
     private String extension;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "item_id", nullable = false)
+    private Item item;
+
+    private AuctionItemImage(String path, String fileName, String originName, String extension, Item item) {
+        this.path = path;
+        this.fileName = fileName;
+        this.originName = originName;
+        this.extension = extension;
+        this.item = item;
+    }
+
+    public static AuctionItemImage of(String path, String fileName, String originName, String extension, Item item) {
+        return new AuctionItemImage(path, fileName, originName, extension, item);
+    }
 }

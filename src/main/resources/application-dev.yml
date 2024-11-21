@@ -1,16 +1,100 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/${LOCAL_DB_NAME}
-    username: ${LOCAL_DB_USERNAME}
-    password: ${LOCAL_DB_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    master:
+      jdbc-url: ${MASTER_DB_URL}
+      username: root
+      password: ${MASTER_DB_PW}
+      driver-class-name: com.mysql.cj.jdbc.Driver
+    slave:
+      jdbc-url: ${SLAVE_DB_URL}
+      username: root
+      password: ${SLAVE_DB_PW}
+      driver-class-name: com.mysql.cj.jdbc.Driver
+
+  thymeleaf:
+    cache: false
+    check-template-location: true
+    prefix: classpath:/templates/
+    suffix: .html
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: guest
+    password: guest
+
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS}
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+    elasticsearch:
+      repositories:
+        enabled: true
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
         show_sql: true
         format_sql: true
         use_sql_comments: true
+
+  cloud:
+    openfeign:
+      url: localhost:8081/api/internal
+
+payment:
+  client:
+    key: ${PAYMENT_CLIENT_KEY}
+  secret:
+    key: ${PAYMENT_SECRET_KEY}
+
+server:
+  error:
+    include-message: always
+  port: 0
+
+notification:
+  related-url:
+    auction: localhost:8080/api/v1/auctions/
+    review: localhost:8080/api/v2/reviews/
+
+kafka:
+  topic:
+    refund: "refund-point-topic"
+    coupon: "coupon-claim-topic"
+  consumer:
+    coupon-group:
+      group-id: "coupon-group"
+    refund-group:
+      group-id: "refund-group"
+  producer:
+    bootstrap-servers: "127.0.0.1:19092, 127.0.0.1:19093, 127.0.0.1:19094"
+    properties:
+      num.partitions: 3
+
+
+logging:
+  level:
+    org:
+      springframework:
+        data:
+          elasticsearch:
+            client:
+              WIRE: TRACE
+
+
+
+---
+spring:
+  config.activate.on-profile: master
+  jpa:
+    hibernate:
+      ddl-auto: update
+

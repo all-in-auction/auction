@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package point;
+
+// 해당 proto 파일로 컴파일된 자바 파일이 위치할 곳
+option java_package = "com.auction";
+
+service PointService {
+
+  // 포인트 0 초기화
+  rpc CreatePoint(CreatePointRequest) returns (CreatePointResponse);
+
+  // 포인트 조회
+  rpc GetPoints(GetPointsRequest) returns (GetPointsResponse);
+
+  // 포인트 차감
+  rpc DecreasePoints(DecreasePointsRequest) returns (DecreasePointsResponse);
+
+  // 포인트 이력 생성
+  rpc CreatePointHistory(CreatePointHistoryRequest) returns (CreatePointHistoryResponse);
+
+  // 포인트 증가
+  rpc IncreasePoint(IncreasePointRequest) returns (IncreasePointResponse);
+}
+
+message IncreasePointRequest {
+  int64 user_id = 1;
+  int32 amount = 2;
+}
+
+message IncreasePointResponse {
+  string status = 1;
+}
+
+message CreatePointHistoryRequest {
+  int64 user_id = 1;
+  int32 amount = 2;
+  PaymentType payment_type = 3; // Enum
+}
+
+message CreatePointHistoryResponse {
+  string status = 1;
+}
+
+message GetPointsRequest {
+  int64 user_id = 1;
+}
+
+message GetPointsResponse {
+  int32 totalPoint = 2;
+}
+
+message DecreasePointsRequest {
+  int64 user_id = 1;
+  int32 amount = 2;
+}
+
+message DecreasePointsResponse {
+  string status = 1; // 응답 상태
+}
+
+message CreatePointRequest {
+  int64 user_id = 1; // 사용자 ID
+}
+
+message CreatePointResponse {
+  string status = 1; // 응답 상태
+}
+
+message PointDto {
+  int64 id = 1; // Point ID
+  int64 user_id = 2; // 사용자 ID
+  int32 point_amount = 3; // 포인트 금액
+}
+
+enum PaymentType {
+  CHARGE = 0;   // 충전
+  SPEND = 1;    // 사용
+  RECEIVE = 2;  // 지급
+  TRANSFER = 3; // 전환
+  REFUND = 4;   // 환불
+}
