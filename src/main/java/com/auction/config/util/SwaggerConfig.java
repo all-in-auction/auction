@@ -13,7 +13,7 @@ public class SwaggerConfig {
     @Bean
     public OpenAPI customOpenAPI() {
         Server gatewayServer = new Server();
-        gatewayServer.setUrl("http://all-in-auction.site");
+        gatewayServer.setUrl("http://www.all-in-auction.site");
         gatewayServer.setDescription("Gateway Server");
 
         return new OpenAPI()
