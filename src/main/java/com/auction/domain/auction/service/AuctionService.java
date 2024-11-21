@@ -58,6 +58,9 @@ public class AuctionService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final PointServiceGrpc.PointServiceBlockingStub pointServiceStub;
 
+    @Value("${kafka.topic.refund}")
+    private String refundTopic;
+
     @Value("${notification.related-url.auction}")
     private String relatedAuctionUrl;
 
@@ -152,6 +155,7 @@ public class AuctionService {
         int bidPrice = adjustBidPrice(bidCreateRequestDto.getPrice());
         validBidPrice(bidPrice, auction, auctionHistoryKey);
 
+        log.info("auctionBid : {}", "start");
         int pointAmount = auctionBidGrpcService.grpcUserPoint(user.getId());
         validatePointBalance(pointAmount, bidPrice);
 
@@ -162,6 +166,7 @@ public class AuctionService {
         auctionRepository.save(auction);
 
         // 포인트 차감, 보증금 예치
+        log.info("depositPoint : {}", "start");
         handleDepositAndPoint(user, auctionId, bidPrice);
 
         // reids zset 에서 이전 최고 입찰 구매자 보증금 환불
@@ -207,12 +212,15 @@ public class AuctionService {
                 (deposit) -> {
                     int prevDeposit = Integer.parseInt(deposit);
                     int gap = bidPrice - prevDeposit;
-
+                    log.info("decreasePoint : {}", "start");
                     auctionBidGrpcService.grpcDecreasePoint(user.getId(), gap);
+                    log.info("createHistory : {}", "start");
                     auctionBidGrpcService.createPointHistory(user.getId(), gap, Point.PaymentType.SPEND);
                 },
                 () -> {
+                    log.info("decreasePoint2 : {}", "start");
                     auctionBidGrpcService.grpcDecreasePoint(user.getId(), bidPrice);
+                    log.info("createHistory2 : {}", "start");
                     auctionBidGrpcService.createPointHistory(user.getId(), bidPrice, Point.PaymentType.SPEND);
                 }
         );
@@ -230,8 +238,10 @@ public class AuctionService {
                         int price = Objects.requireNonNull(tuple.getScore()).intValue();
                         if (refundUserId != currentUserId) {
                             depositService.deleteDeposit(refundUserId, auctionId);
+                            log.info("increasePoint : {}", "start");
                             auctionBidGrpcService.increasePoint(refundUserId, price);
-                            auctionBidGrpcService.createPointHistory(refundUserId, price, Point.PaymentType.REFUND);
+                            log.info("createPointHistory : {}", "start");
+                            auctionBidGrpcService.createPointHistory(refundUserId,price,Point.PaymentType.REFUND);
                         }
                     }
                 });
@@ -242,7 +252,7 @@ public class AuctionService {
         redisTemplate.opsForZSet().incrementScore(AUCTION_RANKING_PREFIX, String.valueOf(auctionId), 1);
     }
 
-    @CircuitBreaker(name = "grpcUserPoint", fallbackMethod = "grpcUserPointFallback")
+//    @CircuitBreaker(name = "grpcUserPoint", fallbackMethod = "grpcUserPointFallback")
     public int grpcUserPoint(long userId) {
         try {
             Point.GetPointsRequest grpcRequest = Point.GetPointsRequest.newBuilder()
@@ -259,7 +269,7 @@ public class AuctionService {
         }
     }
 
-    @CircuitBreaker(name = "grpcDecreasePoint", fallbackMethod = "grpcDecreasePointFallback")
+//    @CircuitBreaker(name = "grpcDecreasePoint", fallbackMethod = "grpcDecreasePointFallback")
     public void grpcDecreasePoint(long userId, int amount) {
         try {
             Point.DecreasePointsRequest grpcRequest = Point.DecreasePointsRequest.newBuilder()
@@ -279,7 +289,7 @@ public class AuctionService {
         }
     }
 
-    @CircuitBreaker(name = "createPointHistory", fallbackMethod = "createPointHistoryFallback")
+//    @CircuitBreaker(name = "createPointHistory", fallbackMethod = "createPointHistoryFallback")
     public void createPointHistory(long userId, int amount, Point.PaymentType paymentType) {
         try {
             Point.CreatePointHistoryRequest grpcRequest = Point.CreatePointHistoryRequest.newBuilder()
