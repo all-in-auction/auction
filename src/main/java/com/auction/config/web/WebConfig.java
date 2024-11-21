@@ -20,11 +20,9 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/v3/api-docs")
+        registry.addMapping("/**")
                 .allowedOrigins("http://www.all-in-auction.site", "http://localhost:8080")
-                .allowedMethods("GET");
-        registry.addMapping("/swagger-ui/**")
-                .allowedOrigins("http://www.all-in-auction.site", "http://localhost:8080")
-                .allowedMethods("GET");
+                .allowedMethods("GET", "POST", "PUT", "DELETE")
+                .allowedHeaders("*");
     }
 }
