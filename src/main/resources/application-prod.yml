@@ -22,14 +22,6 @@ spring:
     port: 5672
     username: guest
     password: guest
-    listener:
-      simple:
-        retry:
-          enabled: true
-          initial-interval: 3s
-          max-interval: 10s
-          max-attempts: 3
-          multiplier: 2
 
   data:
     redis:
@@ -55,10 +47,6 @@ spring:
     uris: ${ELASTICSEARCH_URIS}
     username: ${ELASTICSEARCH_USERNAME}
     password: ${ELASTICSEARCH_PASSWORD}
-
-  cloud:
-    openfeign:
-      url: ${POINT_SERVER_URL}/api/internal
 
 payment:
   client:

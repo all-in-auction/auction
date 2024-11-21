@@ -2,11 +2,13 @@ package com.auction.domain.auth.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class SignupRequestDto {
 
     @NotBlank(message = "이메일은 필수 입력사항입니다.")
@@ -23,5 +25,7 @@ public class SignupRequestDto {
     private int zipCode;
     private String address1;
     private String address2;
+
+    @NotBlank(message = "권한은 필수 입력사항입니다.")
     private String authority;
 }

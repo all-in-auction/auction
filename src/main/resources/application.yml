@@ -10,6 +10,18 @@ spring:
     openfeign:
       okhttp:
         enabled: true
+  main:
+    allow-bean-definition-overriding: true
+
+  rabbitmq:
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 3s
+          max-interval: 10s
+          max-attempts: 3
+          multiplier: 2
 
 cloud:
   aws:
@@ -31,7 +43,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: "prometheus,health"
+        include: prometheus,health,resilience4j.circuitbreakers
 
   endpoint:
     health:
@@ -48,11 +60,6 @@ eureka:
     service-url:
       defaultZone: http://${EUREKA_HOST}:8761/eureka
 
-  instance:
-    instance-id: ${spring.application.name}:${ECS_CONTAINER_METADATA_URI_V4}
-    prefer-ip-address: true
-
-
 logging:
   level:
     com.zaxxer.hikari.HikariConfig: DEBUG
@@ -62,3 +69,12 @@ logging:
 server:
   http2:
     enabled: true
+
+springdoc:
+  api-docs:
+    version: openapi_3_1
+    enabled: true
+    path: /v3/api-docs # API 문서의 경로를 설정합니다.
+  swagger-ui:
+    path: /index.html
+  enable-spring-security: true

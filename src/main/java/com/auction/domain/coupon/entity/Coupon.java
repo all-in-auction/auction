@@ -1,6 +1,7 @@
 package com.auction.domain.coupon.entity;
 
 import com.auction.common.apipayload.status.ErrorStatus;
+import com.auction.common.entity.TimeStamped;
 import com.auction.common.exception.ApiException;
 import com.auction.domain.coupon.dto.request.CouponCreateRequestDto;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -16,7 +17,7 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "coupon")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Coupon {
+public class Coupon extends TimeStamped {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -50,7 +51,7 @@ public class Coupon {
     }
 
     public static Coupon from(CouponCreateRequestDto requestDto) {
-        return new Coupon(requestDto.getExpiredAt(), requestDto.getAmount(),
+        return new Coupon(requestDto.getExpireAt(), requestDto.getAmount(),
                 requestDto.getName(), requestDto.getDiscountRate());
     }
 

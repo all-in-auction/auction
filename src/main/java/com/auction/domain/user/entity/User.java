@@ -1,6 +1,5 @@
 package com.auction.domain.user.entity;
 
-import com.auction.common.entity.AuthUser;
 import com.auction.common.entity.TimeStamped;
 import com.auction.domain.auth.dto.request.SignupRequestDto;
 import com.auction.domain.user.dto.request.UserUpdateRequestDto;
@@ -76,12 +75,6 @@ public class User extends TimeStamped {
         this.id = id;
     }
 
-    private User(long id, String email, UserRole userRole) {
-        this.id = id;
-        this.email = email;
-        this.authority = userRole;
-    }
-
     public User(Long id, String email, String pw, String name, String nickName, int zipCode, String address1, String address2, String authority) {
         this.id = id;
         this.email = email;
@@ -91,22 +84,12 @@ public class User extends TimeStamped {
         this.zipCode = zipCode;
         this.address1 = address1;
         this.address2 = address2;
-        this.authority = UserRole.USER;
+        this.authority = UserRole.valueOf(authority.toUpperCase());
     }
 
     public void changeDeactivate() {
         this.activate = false;
         this.deletedAt = LocalDateTime.now();
-    }
-
-    private User(Long id, String email, UserRole userRole) {
-        this.id = id;
-        this.email = email;
-        this.authority = userRole;
-    }
-
-    public static User fromAuthUser(AuthUser authUser) {
-        return new User(authUser.getId(), authUser.getEmail(), authUser.getUserRole());
     }
 
     public static User fromUserId(long userId) {

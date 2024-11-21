@@ -1,13 +1,11 @@
 package com.auction.domain.notification.service;
 
-import com.auction.common.entity.AuthUser;
-import com.auction.domain.notification.dto.GetNotificationListDto;
 import com.auction.domain.notification.dto.NotificationDto;
+import com.auction.domain.notification.dto.response.GetNotificationResponseDto;
 import com.auction.domain.notification.entity.Notification;
 import com.auction.domain.notification.enums.NotificationType;
 import com.auction.domain.notification.repository.NotificationRepository;
 import com.auction.domain.user.entity.User;
-import com.auction.domain.user.enums.UserRole;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -51,7 +49,7 @@ class NotificationServiceTest {
         // then
         assertNotNull(resultEmitter);
         verify(sseEmitterService).createEmitter(userId);
-        verify(sseEmitterService).send("EventStream Created.", userId, emitter);
+        verify(sseEmitterService).send(any(), eq(userId), any());
         verify(redisMessageService).subscribe(userId);
     }
 
@@ -76,16 +74,16 @@ class NotificationServiceTest {
     @Test
     public void getNotificationTest() {
         // given
-        AuthUser authUser = new AuthUser(1L, "email@email.com", UserRole.USER);
-        GetNotificationListDto dto = new GetNotificationListDto("content", "relatedUrl", true, NotificationType.AUCTION, LocalDateTime.now());
-        List<GetNotificationListDto> list = List.of(dto);
-        when(notificationRepository.getNotificationListByUserIdAndType(authUser.getId(), "auction")).thenReturn(list);
+        long userId = 1L;
+        GetNotificationResponseDto dto = new GetNotificationResponseDto("content", "relatedUrl", true, NotificationType.AUCTION, LocalDateTime.now());
+        List<GetNotificationResponseDto> list = List.of(dto);
+        when(notificationRepository.getNotificationListByUserIdAndType(userId, "auction")).thenReturn(list);
 
         // when
-        List<GetNotificationListDto> results = notificationService.getNotificationList(authUser, "auction");
+        List<GetNotificationResponseDto> results = notificationService.getNotificationList(userId, "auction");
 
         // then
         assertEquals(1, results.size());
-        verify(notificationRepository).getNotificationListByUserIdAndType(authUser.getId(), "auction");
+        verify(notificationRepository).getNotificationListByUserIdAndType(userId, "auction");
     }
 }

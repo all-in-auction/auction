@@ -53,8 +53,8 @@ dependencies {
     runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.5'
     runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.5'
 
-    //security
-    implementation 'org.springframework.boot:spring-boot-starter-security'
+    // bcrypt
+    implementation 'at.favre.lib:bcrypt:0.10.2'
 
     // aws s3
     implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
@@ -71,19 +71,17 @@ dependencies {
     // redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
-    // elasticsearch
-    implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
-    implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client:7.17.0'
-
-    // data faker
-    implementation 'net.datafaker:datafaker:2.4.0'
-
+    // redisson
     implementation 'org.redisson:redisson-spring-boot-starter:3.37.0'
 
     // elasticsearch
     implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+    implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client:7.17.0'
     implementation 'co.elastic.clients:elasticsearch-java:8.11.1'
-//    implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.7.1'
+
+    // data faker
+    implementation 'net.datafaker:datafaker:2.4.0'
+
     // actuator
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
@@ -96,16 +94,12 @@ dependencies {
     //kafka
     implementation 'org.springframework.kafka:spring-kafka'
 
-    implementation 'net.datafaker:datafaker:2.4.0'
-
-    // eureka client
-    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-
     // json 역직렬화
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    // eureka client
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
 
     // gRPC 관련 의존성 추가
     implementation 'io.grpc:grpc-netty:1.56.0'
@@ -117,6 +111,13 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
     implementation 'io.github.openfeign:feign-okhttp'
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+
+    // circuit breaker
+    implementation 'io.github.resilience4j:resilience4j-spring-boot3:2.1.0'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+
+    // swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
 }
 
 tasks.named('test') {

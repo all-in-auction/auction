@@ -2,7 +2,6 @@ package com.auction.domain.coupon.service;
 
 import com.auction.common.annotation.DistributedLock;
 import com.auction.common.apipayload.status.ErrorStatus;
-import com.auction.common.entity.AuthUser;
 import com.auction.common.exception.ApiException;
 import com.auction.domain.coupon.dto.CouponClaimMessage;
 import com.auction.domain.coupon.dto.request.CouponCreateRequestDto;
@@ -12,6 +11,7 @@ import com.auction.domain.coupon.entity.Coupon;
 import com.auction.domain.coupon.repository.CouponRepository;
 import com.auction.domain.coupon.repository.CouponUserRepository;
 import com.auction.domain.user.entity.User;
+import com.auction.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,6 +38,7 @@ public class CouponService {
 
     public static String COUPON_PREFIX = "COUPON:";
     public static String USER_PREFIX = "USER:";
+    private final UserRepository userRepository;
 
     @Value("${kafka.topic.coupon}")
     private String couponTopic;
@@ -55,7 +56,7 @@ public class CouponService {
 
     // 분산락 적용
     @DistributedLock(key = "#couponId")
-    public CouponClaimResponseDto claimCoupon(AuthUser authUser, Long couponId) {
+    public CouponClaimResponseDto claimCoupon(Long userId, Long couponId) {
         Coupon coupon = couponRepository.findById(couponId)
                 .orElseThrow(() -> new ApiException(ErrorStatus._NOT_FOUND_COUPON));
 
@@ -63,7 +64,7 @@ public class CouponService {
             throw new ApiException(ErrorStatus._SOLD_OUT_COUPON);
         }
 
-        User user = User.fromAuthUser(authUser);
+        User user = User.fromUserId(userId);
 
         // 쿠폰 중복 발급 불가
         couponUserRepository.findByUserAndCoupon(user, coupon).ifPresent(t -> {
@@ -80,12 +81,12 @@ public class CouponService {
     }
 
     @Transactional
-    public CouponClaimResponseDto claimCouponV3(AuthUser authUser, Long couponId) {
+    public CouponClaimResponseDto claimCouponV3(Long userId, Long couponId) {
         Coupon coupon = couponRepository.findById(couponId)
                 .orElseThrow(() -> new ApiException(ErrorStatus._NOT_FOUND_COUPON));
 
         String couponKey = COUPON_PREFIX + couponId;
-        String userKey = couponKey + ":" + USER_PREFIX + authUser.getId();
+        String userKey = couponKey + ":" + USER_PREFIX + userId;
         List<String> keys = Arrays.asList(couponKey, userKey);
 
         // Lua 스크립트 실행
@@ -101,7 +102,7 @@ public class CouponService {
         if (result == -200) throw new ApiException(ErrorStatus._SOLD_OUT_COUPON);
 
         // kafka 메세지 발행
-        CouponClaimMessage message = new CouponClaimMessage(authUser.getId(), couponId);
+        CouponClaimMessage message = CouponClaimMessage.of(userId, couponId);
         kafkaTemplate.send(couponTopic, message);
 
         return CouponClaimResponseDto.from(coupon);
