@@ -58,7 +58,11 @@ payment:
 server:
   error:
     include-message: always
+<<<<<<< Updated upstream
   port: 8082
+=======
+  port: 8081
+>>>>>>> Stashed changes
 
 notification:
   related-url:
