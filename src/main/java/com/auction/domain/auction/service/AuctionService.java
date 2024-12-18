@@ -37,6 +37,7 @@ import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -67,11 +68,6 @@ public class AuctionService {
     public static final String AUCTION_HISTORY_PREFIX = "auction:bid:";
     public static final String AUCTION_RANKING_PREFIX = "auction:ranking:";
 
-    private Auction getAuctionById(long auctionId) {
-        return auctionRepository.findByAuctionId(auctionId)
-                .orElseThrow(() -> new ApiException(ErrorStatus._NOT_FOUND_AUCTION));
-    }
-
     private Auction getAuctionWithUser(User user, Long auctionId) {
         return auctionRepository.findByIdAndSellerId(auctionId, user.getId()).orElseThrow(
                 () -> new ApiException(ErrorStatus._NOT_FOUND_AUCTION_ITEM)
@@ -95,6 +91,8 @@ public class AuctionService {
                 TimeConverter.toLong(savedAuction.getExpireAt()),
                 new Date().getTime()
         );
+
+        saveAuctionToRedis(savedAuction);
 
         return AuctionCreateResponseDto.from(savedAuction);
     }
@@ -163,7 +161,7 @@ public class AuctionService {
         handleAutoExtension(auction);
 
         auction.changeMaxPrice(bidPrice);
-        auctionRepository.save(auction);
+        Auction updatedAuction = auctionRepository.save(auction);
 
         // 포인트 차감, 보증금 예치
         log.info("depositPoint : {}", "start");
@@ -175,7 +173,41 @@ public class AuctionService {
         // redis zset 에 입찰 기록 저장
         updateRedis(auctionHistoryKey, user.getId(), bidPrice, auctionId);
 
+        // redis Auction 데이터 업데이트
+        saveAuctionToRedis(updatedAuction);
+
         return BidCreateResponseDto.from(user.getId(), auction);
+    }
+
+    private Auction getAuctionById(long auctionId) {
+        String auctionCacheKey = "auction:" + auctionId;
+
+        // Redis 에서 Auction 데이터 조회
+        Map<Object, Object> auctionCache = redisTemplate.opsForHash().entries(auctionCacheKey);
+        if (!auctionCache.isEmpty()) {
+            return Auction.fromCache(auctionCache);
+        }
+
+        // Redis에 데이터가 없으면 DB에서 조회
+        Auction auction = auctionRepository.findByAuctionId(auctionId)
+                .orElseThrow(() -> new ApiException(ErrorStatus._NOT_FOUND_AUCTION));
+
+        // Redis에 저장
+        saveAuctionToRedis(auction);
+
+        return auction;
+    }
+
+    private void saveAuctionToRedis(Auction auction) {
+        String auctionCacheKey = "auction:" + auction.getId();
+        redisTemplate.opsForHash().put(auctionCacheKey, "id", auction.getId());
+        redisTemplate.opsForHash().put(auctionCacheKey, "sellerId", auction.getSeller().getId());
+        redisTemplate.opsForHash().put(auctionCacheKey, "minPrice", auction.getMinPrice());
+        redisTemplate.opsForHash().put(auctionCacheKey, "maxPrice", auction.getMaxPrice());
+        redisTemplate.opsForHash().put(auctionCacheKey, "isSold", auction.isSold());
+        redisTemplate.opsForHash().put(auctionCacheKey, "autoExtension", auction.isAutoExtension());
+        redisTemplate.opsForHash().put(auctionCacheKey, "expireAt", auction.getExpireAt().toString());
+        redisTemplate.expire(auctionCacheKey, Duration.ofMinutes(30));
     }
 
     private void validateBidRequest(User user, Auction auction) {
@@ -212,15 +244,11 @@ public class AuctionService {
                 (deposit) -> {
                     int prevDeposit = Integer.parseInt(deposit);
                     int gap = bidPrice - prevDeposit;
-                    log.info("decreasePoint : {}", "start");
                     auctionBidGrpcService.grpcDecreasePoint(user.getId(), gap);
-                    log.info("createHistory : {}", "start");
                     auctionBidGrpcService.createPointHistory(user.getId(), gap, Point.PaymentType.SPEND);
                 },
                 () -> {
-                    log.info("decreasePoint2 : {}", "start");
                     auctionBidGrpcService.grpcDecreasePoint(user.getId(), bidPrice);
-                    log.info("createHistory2 : {}", "start");
                     auctionBidGrpcService.createPointHistory(user.getId(), bidPrice, Point.PaymentType.SPEND);
                 }
         );

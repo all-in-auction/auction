@@ -71,7 +71,7 @@ public class User extends TimeStamped {
         this.activate = true;
     }
 
-    private User(long id) {
+    public User(long id) {
         this.id = id;
     }
 

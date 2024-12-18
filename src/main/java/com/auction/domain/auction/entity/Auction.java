@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Map;
 
 @Getter
 @Entity
@@ -85,6 +86,19 @@ public class Auction extends TimeStamped {
         this.buyer = buyer;
         this.isSold = true;
     }
+
+    public static Auction fromCache(Map<Object, Object> cache) {
+        Auction auction = new Auction();
+        auction.id = Long.parseLong((String) cache.get("id"));
+        auction.seller = new User(Long.parseLong((String) cache.get("sellerId")));
+        auction.minPrice = Integer.parseInt((String) cache.get("minPrice"));
+        auction.maxPrice = Integer.parseInt((String) cache.get("maxPrice"));
+        auction.isSold = Boolean.parseBoolean((String) cache.get("isSold"));
+        auction.isAutoExtension = Boolean.parseBoolean((String) cache.get("autoExtension"));
+        auction.expireAt = LocalDateTime.parse(cache.get("expireAt").toString());
+        return auction;
+    }
+
 
     public Long getBuyerId() {
         return buyer != null ? buyer.getId() : null;
