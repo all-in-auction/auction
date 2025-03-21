@@ -23,7 +23,7 @@
             <b>부팀장</b><br />
             <a href="https://github.com/kim-na-ram" style="font-size: 16px;">김나람</a>
             <div style="margin-top: 5px; font-size: 14px;">
-              경매<br />모니터링 시스템<br />쿠폰 만료 처리 배치<br />배치 서버 CI/CD<br />MSA 전환(OpenFeign)
+              경매<br />모니터링 시스템<br />만료된 쿠폰 처리 배치<br />배치 서버 CI/CD<br />MSA 전환(OpenFeign)
             </div>
           </div>
         </td>
@@ -138,10 +138,16 @@
 </div>
 
 <br>
+<h2>7. <a href="https://spectacled-plastic-a9d.notion.site/API-142df15aae158026847fd12047e109d1">API 명세</a></h2>
+<img src="https://github.com/user-attachments/assets/c89f7fb1-502f-4b0d-a679-def20a8cc650" width="80%">
+<img src="https://github.com/user-attachments/assets/05c8c3ff-1e46-4468-8fa8-d905e46da580" width="80%">
 
-<h2>7. <a href="https://spectacled-plastic-a9d.notion.site/145df15aae15809cb1cad825e0a8364c?pvs=4">기술적 의사결정</a></h2>
+<br>
+<br>
 
-## 8. 트러블 슈팅 & 최적화 전략
+<h2>8. <a href="https://spectacled-plastic-a9d.notion.site/145df15aae15809cb1cad825e0a8364c?pvs=4">기술적 의사결정</a></h2>
+
+## 9. 트러블 슈팅 & 최적화 전략
 
 ### 1-1. 입찰 기능 성능 향상 (CQRS 도입)
 
@@ -269,40 +275,43 @@
 #### 🔍 문제 원인
 
 - **JPAItemWriter**의 **Dirty Checking**으로 단건 처리 발생하며 빈번한 Database 통신으로 인한 성능 저하.
+- **JPAItemReader**로 **offset 기반 페이징 한계**로 인해 데이터가 많아질수록 조회 속도 저하.
 - Reader에서 모든 컬럼 조회하며 불필요한 데이터 과다 조회.
+- 작은 chunk size로 인해 트랜잭션 커밋, I/O이 빈번하게 일어나 성능 저하.
 
 #### 💡 기술 도입
 
-- Writer를 **JDBCBatchItemWriter**로 변경하여 배치 단위로 데이터 처리.
+- Writer를 **JDBCBatchItemWriter**로 변경하여 청크 기반 처리로 대량 데이터 처리 성능 향상.
+- Reader를 **JDBCPagingItemReader**로 변경하여 no-offset pagination으로 쿼리 성능 개선.
 - Reader에서 필요한 컬럼만 조회하도록 **Projection** 적용하여 **쿼리 최적화**.
+- 테스트를 통해 **적정한 chunk 크기를 찾아** 100에서 500으로 조정.
 - 순서 보장이 불필요한 작업이므로 Single Thread에서 **Multi Thread**로 변경.
 
 #### 📈 도입 전후 비교
 
-- **도입 전**: 만료된 쿠폰 처리 시간 1시간 47분.
-- **1차 개선 - Reader, Writer 변경**: 처리 시간 21분으로 단축.
-- **2차 개선 - Multi Thread로 변경**: 처리 시간 1분으로 단축.
+- **도입 전**: 만료된 쿠폰 처리 시간 10시간 20분.
+- **1차 개선 - Reader, Writer 변경, Chunk 크기 최적화**: 처리 시간 31분 40초로 단축.
+- **2차 개선 - Multi Thread로 변경**: 처리 시간 19분 34초로 단축.
 
 #### 🌟 성능 개선 요약
 
-- **처리 속도 1차 개선**: 107.44분 → 21.05분 (약 `5.1배 향상`).
-- **처리 속도 2차 개선**: 21.05분 → 1.32분 (약 `15.9배 향상`).
-- **총 실행 시간 단축**: 107.44분 → 1.32분 (약 `98.77% 단축`).
+- **처리 속도 1차 개선**: 37240분 → 1900분 (약 `94.90% 단축`).
+- **처리 속도 2차 개선**: 1900분 → 1174분 (약 `38.20% 단축`).
+- **총 실행 시간 단축**: 37240분 → 1174분 (약 `98.77% 단축`).
 
 <br>
 
 **[Before]**   
-<img src="img/batch1.png" width="80%">
+<img src="https://velog.velcdn.com/images/no1ro1m/post/42292b1c-56a7-4ed1-abe9-bb7ad0bbac69/image.png" width="80%">
 
 **[1차 개선]**   
-<img src="img/batch2.png" width="80%">
+<img src="https://velog.velcdn.com/images/no1ro1m/post/2915545b-62fd-4a58-a107-68f5037eafc8/image.png" width="80%">
 
 **[2차 개선]**   
-<img src="img/batch3.png" width="80%">
+<img src="https://velog.velcdn.com/images/no1ro1m/post/4c8c69ef-2eb5-4adf-9fe9-6a8a1ce61682/image.png" width="80%">
 
 <br>
-<img src="img/batch_output.png" width="25%">
-<!-- (수정) -->
+<img src="https://github.com/user-attachments/assets/605e4a0c-7a52-4483-bee5-8556e4e179b1" width="25%">
 <br>
 
 ### 4. MSA 전환 후 장애 대응 및 오류 전파 방지 (Circuit Breaker 사용)
